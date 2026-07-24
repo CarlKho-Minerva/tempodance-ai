@@ -1,8 +1,8 @@
 # TempoDance AI
 
-[![Watch the 29-second TempoDance AI demo](artifacts/youtube-thumbnail.png)](artifacts/tempodance-demo-voiced.mp4)
+[![Watch the TempoDance AI demo on YouTube](artifacts/youtube-thumbnail.png)](https://youtu.be/l5TPZ2Bd-HI)
 
-**[▶ Watch the 29-second demo](artifacts/tempodance-demo-voiced.mp4)** · **[Launch TempoDance AI on Vercel](https://tempodance-ai.vercel.app)**
+**[▶ Watch the demo on YouTube](https://youtu.be/l5TPZ2Bd-HI)** · **[Launch the demo-only Vercel build](https://tempodance-ai.vercel.app)**
 
 ![TempoDance AI cover featuring the source-synced coaching workspace](assets/cover.png)
 
@@ -21,7 +21,7 @@ The current hackathon build is deliberately demo-safe:
 
 ## Run it now
 
-Open the **[hosted demo](https://tempodance-ai.vercel.app)** for the deterministic no-camera experience, or run the complete local API and optional camera path below.
+Open the **[hosted demo](https://tempodance-ai.vercel.app)** for the deterministic no-camera experience only. For the full product, clone this repo and run it locally with the API and optional camera path below.
 
 From this directory:
 
