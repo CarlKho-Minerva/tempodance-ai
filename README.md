@@ -2,7 +2,7 @@
 
 ![TempoDance AI cover](assets/cover.png)
 
-TempoDance AI is a self-evolving dance coach. It compares a learner's body geometry with a built-in animated eight-count, identifies the lowest-scoring tracked limb, and evaluates its coaching focus after each completed server-side loop.
+TempoDance AI is a self-evolving dance coach. It compares a learner's body geometry with a source-synchronized tutorial pose, identifies the lowest-scoring tracked limb, and evaluates its coaching focus after each completed server-side loop.
 
 The current hackathon build is deliberately demo-safe:
 
@@ -11,6 +11,8 @@ The current hackathon build is deliberately demo-safe:
 - **The coaching policy evolves from measured errors**, with visible memory and policy versions.
 - **Automatic progression requires two qualifying loops** at each tier: `0.5x`, `0.6x`, `0.8x`, and `1.0x`. Manual controls remain available.
 - **Cloud routine planning is optional.** A Fireworks adapter accepts caller-supplied frame images, while scoring and coaching remain deterministic.
+- **The supplied YouTube Short is packaged locally with audio.** Its lower tutorial coach was processed into a 10 FPS COCO-17 pose track, so the purple overlay and source video share one playback clock.
+- **Practice is progressive.** Upper body, lower body, and the combined move are separate, manually controlled steps; only the selected region is rendered and scored.
 
 ## Run it now
 
@@ -21,6 +23,8 @@ From this directory:
 ```
 
 Then open [http://localhost:8000](http://localhost:8000), leave **Demo mode** selected, and press the circular play button. Use the camera path only after the no-camera flow is working.
+
+The reference panel plays the locally packaged copy of `https://www.youtube.com/shorts/W0N9pOGTgZM` with its audio and extracted pose overlay. Use the **Next** button to move from upper body to lower body, then to the combined move.
 
 The copied virtual environment has stale shell-script shebangs because the folder moved. Invoking tools as `./venv/bin/python -m ...` avoids that problem. To rebuild it cleanly later:
 
@@ -43,9 +47,19 @@ Copy `.env.example` to `.env`, redeem any event coupon through the sponsor flow,
 
 ## What is real in the demo
 
-The no-camera demo uses scripted landmark perturbations and a browser cosine scorer. With the local API connected, its score and per-bone values feed the real server-side policy and mastery session; without the API, a scripted UI fallback keeps the walkthrough usable. Live camera frames are scored in Python. The current build uses a built-in COCO-17 reference; tutorial landmark extraction and beat alignment are roadmap work.
+The no-camera demo uses scripted learner perturbations and a browser cosine scorer against the real extracted tutorial track. With the local API connected, its score and per-bone values feed the real server-side policy and mastery session; without the API, a scripted learner fallback keeps the walkthrough usable. Live camera frames are scored in Python. Reference landmarks come from YOLO inference over the supplied tutorial; video time is the shared synchronization clock.
 
 In the documented localhost setup, webcam JPEGs go to the local FastAPI process for in-memory inference and are not persisted by application code. A hosted or overridden API sends frames to that configured server. Policy state lives in server memory and is not written to disk.
+
+## Rebuild the tutorial assets
+
+The committed browser assets can be regenerated from the source URL with `yt-dlp`, FFmpeg, and the local Ultralytics pose model:
+
+```bash
+./venv/bin/python scripts/process_tutorial.py --model yolo11n-pose.pt
+```
+
+The script downloads into a temporary directory, transcodes the source to browser-compatible H.264/AAC, crops inference to the lower tutorial coach, and writes the local MP4 plus COCO-17 pose JSON to `frontend/assets/`.
 
 ## Judge-demo state
 
