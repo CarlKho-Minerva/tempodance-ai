@@ -78,6 +78,7 @@ const REFERENCE_KEYFRAMES = [
 
 const state = {
   mode: "demo",
+  practicePlan: "steps",
   focus: "upper",
   audioEnabled: true,
   speedLocked: true,
@@ -179,6 +180,9 @@ const elements = {
   learningStepTitle: $("#learningStepTitle"),
   learningStepHint: $("#learningStepHint"),
   nextFocusButton: $("#nextFocusButton"),
+  practicePlanHint: $("#practicePlanHint"),
+  stepPlanButton: $("#stepPlanButton"),
+  fullPlanButton: $("#fullPlanButton"),
   audioToggle: $("#audioToggle"),
   sourceOverlayLabel: $("#sourceOverlayLabel"),
   sourceBadge: $("#sourceBadge"),
@@ -250,11 +254,21 @@ async function loadSourceMotion() {
 function updateFocusUI() {
   const index = Math.max(0, FOCUS_STEPS.findIndex((step) => step.id === state.focus));
   const step = FOCUS_STEPS[index];
-  elements.learningStepNumber.textContent = `Step ${index + 1} of ${FOCUS_STEPS.length}`;
-  elements.learningStepTitle.textContent = step.title;
-  elements.learningStepHint.textContent = step.hint;
+  const stepByStep = state.practicePlan === "steps";
+  elements.learningStepNumber.textContent = stepByStep ? `Step ${index + 1} of ${FOCUS_STEPS.length}` : "Full routine";
+  elements.learningStepTitle.textContent = stepByStep ? step.title : "Everything together";
+  elements.learningStepHint.textContent = stepByStep ? step.hint : "Follow the complete coach motion with the video, audio, and beat counts synchronized.";
   elements.sourceOverlayLabel.textContent = step.overlay;
   elements.focusLabel.textContent = `Focus · ${step.id === "full" ? "full body" : `${step.id} body only`}`;
+  elements.practicePlanHint.textContent = stepByStep
+    ? "Learn upper body, then lower body, then combine"
+    : "Practice the complete movement from the start";
+  elements.stepPlanButton.classList.toggle("active", stepByStep);
+  elements.stepPlanButton.setAttribute("aria-pressed", String(stepByStep));
+  elements.fullPlanButton.classList.toggle("active", !stepByStep);
+  elements.fullPlanButton.setAttribute("aria-pressed", String(!stepByStep));
+  $("#focusSteps").hidden = !stepByStep;
+  elements.nextFocusButton.hidden = !stepByStep;
   elements.nextFocusButton.textContent = index === FOCUS_STEPS.length - 1
     ? "Restart: upper body"
     : `Next: ${FOCUS_STEPS[index + 1].id} body`;
@@ -264,6 +278,19 @@ function updateFocusUI() {
     button.classList.toggle("active", active);
     button.setAttribute("aria-pressed", String(active));
   });
+}
+
+function setPracticePlan(plan, { announce = true } = {}) {
+  if (!["steps", "full"].includes(plan)) return;
+  const changed = state.practicePlan !== plan;
+  if (!changed) return;
+  state.practicePlan = plan;
+  setFocus(plan === "steps" ? "upper" : "full", { announce: false });
+  if (announce && changed) {
+    toast(plan === "steps"
+      ? "Step-by-step plan · start with upper body only"
+      : "Full routine plan · complete movement enabled");
+  }
 }
 
 function setFocus(focus, { announce = true } = {}) {
@@ -1247,6 +1274,7 @@ function resetSession({ keepMode = true } = {}) {
   elements.referenceVideo.currentTime = 0;
   Object.assign(state, {
     mode: keepMode ? state.mode : "demo",
+    practicePlan: "steps",
     focus: "upper",
     phase: 0,
     countPhase: 0,
@@ -1441,6 +1469,8 @@ function initialize() {
   elements.enableCameraButton.addEventListener("click", enableCamera);
   elements.useDemoFallbackButton.addEventListener("click", () => setMode("demo"));
   elements.audioToggle.addEventListener("click", () => setAudioEnabled(!state.audioEnabled));
+  elements.stepPlanButton.addEventListener("click", () => setPracticePlan("steps"));
+  elements.fullPlanButton.addEventListener("click", () => setPracticePlan("full"));
   $$(".focus-step").forEach((button) => {
     button.addEventListener("click", () => setFocus(button.dataset.focus));
   });

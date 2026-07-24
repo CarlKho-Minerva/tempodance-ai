@@ -659,6 +659,78 @@ h1 span {
   background: linear-gradient(145deg, rgba(183, 255, 90, 0.055), rgba(18, 18, 26, 0.76));
 }
 
+.practice-plan {
+  display: flex;
+  grid-column: 1 / -1;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.practice-plan-copy {
+  display: grid;
+  gap: 2px;
+}
+
+.practice-plan-copy span {
+  color: #f0f0f4;
+  font-size: 9px;
+  font-weight: 780;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.practice-plan-copy small {
+  color: var(--muted);
+  font-size: 8px;
+}
+
+.plan-options {
+  display: inline-flex;
+  gap: 3px;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.plan-option {
+  display: inline-flex;
+  min-height: 31px;
+  cursor: pointer;
+  align-items: center;
+  gap: 6px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #777784;
+  font: inherit;
+  font-size: 8px;
+  font-weight: 740;
+}
+
+.plan-option svg {
+  width: 13px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+.plan-option.active {
+  background: rgba(183, 255, 90, 0.1);
+  color: var(--lime);
+}
+
+.focus-steps[hidden],
+.next-focus-button[hidden] {
+  display: none;
+}
+
 .learning-step-copy {
   display: grid;
   min-width: 0;
@@ -2170,6 +2242,16 @@ h1 span {
     display: flex;
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .practice-plan {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .plan-option {
+    flex: 1;
+    justify-content: center;
   }
 
   .focus-step {

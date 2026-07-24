@@ -121,6 +121,22 @@
             </div>
 
             <div class="learning-steps" aria-label="Learning progression">
+              <div class="practice-plan">
+                <div class="practice-plan-copy">
+                  <span>Practice plan</span>
+                  <small id="practicePlanHint">Learn one body region at a time</small>
+                </div>
+                <div class="plan-options" role="group" aria-label="Choose a practice plan">
+                  <button id="stepPlanButton" class="plan-option active" type="button" aria-pressed="true">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6h14M5 12h9M5 18h5"/><circle cx="18" cy="12" r="2"/><circle cx="14" cy="18" r="2"/></svg>
+                    Step by step
+                  </button>
+                  <button id="fullPlanButton" class="plan-option" type="button" aria-pressed="false">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 7 8 5-8 5V7Z"/><circle cx="12" cy="12" r="9"/></svg>
+                    Full routine
+                  </button>
+                </div>
+              </div>
               <div class="learning-step-copy">
                 <span id="learningStepNumber">Step 1 of 3</span>
                 <strong id="learningStepTitle">Upper body only</strong>
