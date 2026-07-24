@@ -69,13 +69,13 @@
               type="url"
               inputmode="url"
               autocomplete="url"
-              value="https://www.youtube.com/watch?v=tempo-demo"
+              value="https://www.youtube.com/shorts/W0N9pOGTgZM"
               placeholder="Paste a YouTube or video URL"
             />
           </label>
           <div class="routine-meta" aria-label="Routine metadata">
-            <span id="routineName">8-count house groove</span>
-            <span><b id="routineBpm">112</b> BPM</span>
+            <span id="routineName">Hollywood Action · mirrored tutorial</span>
+            <span><b id="routineBpm">0.8×</b> source speed</span>
             <span><b>8</b> counts</span>
           </div>
           <button id="analyzeButton" class="primary-button" type="button">
@@ -115,28 +115,50 @@
               </div>
             </div>
 
+            <div class="learning-steps" aria-label="Learning progression">
+              <div class="learning-step-copy">
+                <span id="learningStepNumber">Step 1 of 3</span>
+                <strong id="learningStepTitle">Upper body only</strong>
+                <small id="learningStepHint">Follow the arms and shoulders. Legs are intentionally hidden.</small>
+              </div>
+              <div id="focusSteps" class="focus-steps" role="group" aria-label="Choose body focus">
+                <button class="focus-step active" data-focus="upper" type="button" aria-pressed="true"><i>1</i> Upper</button>
+                <button class="focus-step" data-focus="lower" type="button" aria-pressed="false"><i>2</i> Lower</button>
+                <button class="focus-step" data-focus="full" type="button" aria-pressed="false"><i>3</i> Together</button>
+              </div>
+              <button id="nextFocusButton" class="next-focus-button" type="button">Next: lower body</button>
+            </div>
+
             <div class="stage-grid">
               <article class="stage-panel reference-stage">
                 <div class="stage-header">
                   <div>
                     <span class="stage-kicker">Reference</span>
-                    <h2>Coach motion</h2>
+                    <h2>Source video + coach motion</h2>
                   </div>
-                  <span class="stage-badge">COCO-17</span>
+                  <span id="sourceBadge" class="stage-badge source"><i></i> Local video + audio</span>
                 </div>
-                <div class="canvas-wrap">
-                  <canvas id="referenceCanvas" aria-label="Animated reference pose skeleton"></canvas>
+                <div class="canvas-wrap source-canvas-wrap">
+                  <video
+                    id="referenceVideo"
+                    src="./assets/tutorial-W0N9pOGTgZM.mp4"
+                    preload="metadata"
+                    playsinline
+                    aria-label="Locally processed copy of the supplied YouTube tutorial"
+                  ></video>
+                  <canvas id="referenceCanvas" aria-label="Coach pose extracted from and overlaid on the source video"></canvas>
+                  <div class="source-overlay-label"><i></i><span id="sourceOverlayLabel">Upper body overlay</span></div>
                   <div id="referenceLoading" class="stage-loading" hidden>
                     <span class="orb-loader"></span>
-                    <strong>Preparing practice loop</strong>
-                    <small>Loading the built-in reference skeleton</small>
+                    <strong>Preparing source overlay</strong>
+                    <small>Loading the YouTube video and its extracted coach motion</small>
                   </div>
                   <div class="count-watermark" aria-hidden="true"><span id="watermarkCount">1</span><small>/ 8</small></div>
                   <div class="ground-line" aria-hidden="true"></div>
                 </div>
                 <div class="stage-footer">
-                  <span><i class="legend-line reference"></i> Target path</span>
-                  <span id="focusLabel">Focus · full body</span>
+                  <span><i class="legend-line reference"></i> YOLO pose extracted from this Short</span>
+                  <span id="focusLabel">Focus · upper body</span>
                 </div>
               </article>
 

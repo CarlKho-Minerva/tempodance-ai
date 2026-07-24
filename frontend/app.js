@@ -8,7 +8,18 @@ const WS_ORIGIN = API_ORIGIN.replace(/^http/, "ws");
 const SPEEDS = [0.5, 0.6, 0.8, 1];
 const BASE_BEAT_MS = 320;
 const SCORE_RING_LENGTH = 138.23;
-const FOCUS = "full";
+const SOURCE_VIDEO_ID = "W0N9pOGTgZM";
+const SOURCE_VIDEO_URL = `https://www.youtube.com/shorts/${SOURCE_VIDEO_ID}`;
+const SOURCE_VIDEO_PATH = `./assets/tutorial-${SOURCE_VIDEO_ID}.mp4`;
+const SOURCE_POSE_PATH = `./assets/tutorial-${SOURCE_VIDEO_ID}-pose.json`;
+const SOURCE_DURATION_SECONDS = 23.83;
+const SOURCE_ASPECT_RATIO = 9 / 16;
+
+const FOCUS_STEPS = [
+  { id: "upper", title: "Upper body only", hint: "Follow the arms and shoulders. Legs are intentionally hidden.", overlay: "Upper body overlay" },
+  { id: "lower", title: "Lower body only", hint: "Now follow the hips, knees, and feet. Arms are intentionally hidden.", overlay: "Lower body overlay" },
+  { id: "full", title: "Put it together", hint: "Combine both patterns only after practicing each half separately.", overlay: "Full-body overlay" },
+];
 
 // COCO-17: nose, eyes, ears, shoulders, elbows, wrists, hips, knees, ankles.
 const COCO_BONES = [
@@ -37,19 +48,38 @@ const JOINT_LABELS = [
   "Left knee", "Right knee", "Left ankle", "Right ankle",
 ];
 
+// COCO-17 landmarks sampled from the lower tutorial coach in the supplied Short.
+// Only the landmark data is bundled; video and audio continue to stream from YouTube.
 const REFERENCE_KEYFRAMES = [
-  [[.50,.16],[.485,.15],[.515,.15],[.47,.16],[.53,.16],[.42,.29],[.58,.29],[.36,.43],[.64,.43],[.32,.57],[.68,.57],[.45,.55],[.55,.55],[.39,.72],[.61,.72],[.35,.89],[.65,.89]],
-  [[.48,.15],[.465,.14],[.495,.14],[.45,.15],[.515,.15],[.40,.29],[.56,.30],[.32,.20],[.65,.42],[.26,.10],[.72,.51],[.43,.54],[.54,.56],[.37,.70],[.64,.72],[.34,.88],[.69,.87]],
-  [[.50,.15],[.485,.14],[.515,.14],[.47,.15],[.53,.15],[.41,.29],[.59,.29],[.28,.30],[.72,.30],[.15,.34],[.85,.34],[.44,.55],[.56,.55],[.36,.71],[.64,.71],[.31,.88],[.69,.88]],
-  [[.52,.16],[.505,.15],[.535,.15],[.49,.16],[.55,.16],[.43,.30],[.61,.29],[.36,.17],[.67,.18],[.43,.09],[.60,.08],[.46,.56],[.57,.54],[.39,.73],[.64,.68],[.35,.90],[.70,.83]],
-  [[.52,.16],[.505,.15],[.535,.15],[.49,.16],[.55,.16],[.44,.29],[.60,.30],[.35,.43],[.69,.20],[.31,.57],[.75,.10],[.46,.55],[.57,.56],[.39,.71],[.65,.74],[.34,.87],[.71,.90]],
-  [[.50,.15],[.485,.14],[.515,.14],[.47,.15],[.53,.15],[.41,.29],[.59,.29],[.29,.35],[.71,.35],[.18,.43],[.82,.43],[.44,.54],[.56,.54],[.38,.66],[.62,.76],[.31,.80],[.68,.92]],
-  [[.48,.16],[.465,.15],[.495,.15],[.45,.16],[.515,.16],[.40,.30],[.57,.29],[.34,.43],[.65,.41],[.42,.51],[.72,.50],[.43,.55],[.54,.54],[.35,.74],[.61,.68],[.29,.91],[.67,.83]],
-  [[.50,.14],[.485,.13],[.515,.13],[.47,.14],[.53,.14],[.41,.28],[.59,.28],[.35,.16],[.65,.16],[.47,.08],[.53,.08],[.44,.53],[.56,.53],[.38,.70],[.62,.70],[.34,.87],[.66,.87]],
+  [[.4394,.3434],[.4571,.3315],[.4190,.3324],[.4830,.3437],[.3907,.3456],[.5459,.4145],[.3596,.4217],[.6459,.4810],[.2862,.5038],[.7015,.4985],[.2426,.5164],[.5405,.5918],[.4272,.5959],[.5351,.7428],[.4365,.7493],[.5312,.9075],[.4428,.9132]],
+  [[.5524,.3387],[.5736,.3288],[.5341,.3256],[.5924,.3429],[.4936,.3347],[.6182,.4244],[.4111,.4114],[.6374,.5338],[.3249,.5146],[.6421,.6178],[.3248,.5956],[.5351,.6091],[.4076,.6053],[.5240,.7591],[.4068,.7589],[.5098,.9191],[.4337,.9218]],
+  [[.4824,.3380],[.5026,.3273],[.4590,.3259],[.5238,.3445],[.4157,.3427],[.5613,.4231],[.3695,.4191],[.5649,.5200],[.3719,.5051],[.4760,.4687],[.4545,.4542],[.5403,.6018],[.4073,.6016],[.5494,.7548],[.4077,.7538],[.5472,.8986],[.4276,.8988]],
+  [[.4935,.3655],[.5160,.3548],[.4736,.3539],[.5423,.3688],[.4437,.3664],[.5932,.4387],[.3918,.4326],[.6990,.4848],[.2738,.4668],[.7457,.4669],[.2277,.4504],[.5669,.6083],[.4467,.6080],[.5614,.7623],[.4742,.7604],[.5771,.9078],[.5038,.9069]],
+  [[.4014,.5034],[.4190,.4881],[.3782,.4923],[.4703,.4798],[.3629,.4883],[.5517,.5170],[.3743,.5096],[.7028,.5768],[.2694,.5149],[.8446,.6326],[.2033,.4976],[.5736,.6557],[.4343,.6574],[.7109,.7811],[.3950,.7894],[.8465,.8966],[.3306,.9145]],
+  [[.4702,.3877],[.4901,.3736],[.4444,.3748],[.5121,.3795],[.3963,.3816],[.5413,.4501],[.3381,.4454],[.6173,.5350],[.2630,.5137],[.6769,.5845],[.2975,.5299],[.5085,.6191],[.3661,.6237],[.5872,.7597],[.3723,.7714],[.6885,.9014],[.4051,.9193]],
+  [[.5636,.3536],[.5777,.3421],[.5385,.3402],[.5823,.3562],[.4822,.3521],[.6014,.4349],[.4114,.4165],[.6417,.5166],[.3420,.4824],[.6888,.4344],[.4308,.3970],[.5543,.5996],[.4166,.5987],[.6214,.7541],[.4078,.7585],[.6906,.8982],[.4076,.9157]],
+  [[.2832,.4007],[.3024,.3890],[.2732,.3907],[.3601,.3850],[.2931,.3891],[.4344,.4249],[.3073,.4346],[.4042,.4537],[.2565,.4945],[.2551,.4340],[.1934,.5149],[.4296,.6010],[.3454,.5991],[.3940,.7427],[.3522,.7355],[.3566,.9043],[.3538,.8974]],
+  [[.6787,.5051],[.6809,.4984],[.6755,.4925],[.6602,.4763],[.6412,.4673],[.6105,.4893],[.5230,.4741],[.5693,.5488],[.4513,.5328],[.6404,.5568],[.5970,.5570],[.4553,.5918],[.4050,.5912],[.5200,.7163],[.5211,.7216],[.4935,.8850],[.5606,.9002]],
+  [[.5548,.3823],[.5630,.3695],[.5379,.3678],[.5353,.3702],[.4869,.3670],[.5049,.4331],[.4151,.4177],[.4653,.5332],[.3358,.4968],[.5357,.5783],[.4393,.5411],[.4442,.6182],[.3935,.6210],[.5462,.7263],[.5358,.7349],[.4348,.9052],[.4582,.9287]],
+  [[.3290,.3445],[.3442,.3303],[.3117,.3334],[.3877,.3279],[.3056,.3346],[.4612,.3843],[.3207,.3957],[.4830,.4795],[.3328,.5047],[.3614,.5320],[.3020,.5563],[.4678,.5761],[.3760,.5779],[.4557,.7267],[.3871,.7286],[.4703,.8956],[.4259,.8960]],
+  [[.3166,.3262],[.3525,.3212],[.3213,.3203],[.3961,.3360],[.3290,.3203],[.3984,.3766],[.3043,.3455],[.4553,.4088],[.4278,.3989],[.4310,.3644],[.5786,.4044],[.4292,.5235],[.3843,.5127],[.4094,.6701],[.5699,.6398],[.4412,.8030],[.8154,.7483]],
+  [[.5761,.3361],[.5967,.3258],[.5552,.3234],[.6155,.3400],[.5119,.3328],[.6530,.4196],[.4423,.4090],[.6865,.5191],[.3750,.4871],[.6843,.5903],[.4190,.5124],[.6006,.6083],[.4673,.6073],[.5929,.7584],[.4576,.7639],[.5687,.9168],[.4626,.9196]],
+  [[.5663,.3563],[.5813,.3461],[.5465,.3440],[.5871,.3566],[.4970,.3526],[.6094,.4267],[.4214,.4159],[.6073,.4971],[.3075,.5124],[.5829,.4732],[.2979,.5684],[.5639,.6101],[.4321,.6078],[.6431,.7555],[.4461,.7495],[.7021,.8950],[.4551,.9055]],
+  [[.5964,.3856],[.6170,.3726],[.5760,.3715],[.6435,.3726],[.5406,.3705],[.6792,.4301],[.4939,.4353],[.7422,.5179],[.4601,.5342],[.7541,.6008],[.4557,.6081],[.6686,.6101],[.5541,.6150],[.6857,.7399],[.6011,.7462],[.6898,.8896],[.6593,.8904]],
+  [[.4568,.3725],[.4754,.3612],[.4391,.3603],[.5033,.3687],[.4134,.3660],[.5426,.4307],[.3823,.4259],[.6036,.5017],[.3201,.4990],[.6297,.5147],[.3383,.5073],[.5346,.6046],[.4247,.6056],[.5716,.7564],[.4319,.7582],[.6216,.9229],[.4353,.9255]],
+  [[.5677,.3944],[.5918,.3848],[.5504,.3815],[.6102,.3954],[.5072,.3841],[.6536,.4516],[.4090,.4393],[.7733,.4788],[.2687,.4593],[.8003,.4819],[.3308,.4485],[.6243,.6208],[.4780,.6220],[.6590,.7625],[.5602,.7612],[.6500,.9194],[.5926,.9104]],
+  [[.5552,.3666],[.5776,.3553],[.5374,.3542],[.6145,.3605],[.5113,.3575],[.6788,.4184],[.4520,.4154],[.7157,.4792],[.3862,.4900],[.5932,.4585],[.4831,.4870],[.6370,.6016],[.4846,.5995],[.6307,.7551],[.4764,.7483],[.6273,.9149],[.4893,.9052]],
+  [[.6173,.3320],[.6167,.3203],[.5983,.3218],[.5936,.3203],[.5403,.3254],[.6074,.3895],[.4672,.3914],[.5709,.4882],[.4578,.4836],[.6499,.5172],[.5823,.4982],[.5569,.5900],[.4642,.5973],[.6080,.7355],[.4883,.7574],[.5008,.8710],[.4148,.9101]],
+  [[.5064,.3572],[.5267,.3463],[.4885,.3452],[.5509,.3535],[.4567,.3506],[.6000,.4076],[.4133,.4145],[.6596,.4270],[.3776,.4934],[.6446,.3962],[.3935,.5516],[.5821,.5795],[.4639,.5808],[.5750,.7384],[.4773,.7332],[.5566,.8919],[.5007,.8901]],
+  [[.5344,.3562],[.5417,.3462],[.5172,.3458],[.5278,.3474],[.4632,.3489],[.5166,.3953],[.4227,.3984],[.5099,.4404],[.4366,.4464],[.5335,.4261],[.5421,.4237],[.5074,.5848],[.4247,.5904],[.5785,.7512],[.4154,.7601],[.6191,.8799],[.3853,.8925]],
+  [[.6431,.4164],[.6515,.4084],[.6323,.4049],[.6299,.4157],[.5813,.4027],[.6069,.4690],[.5049,.4361],[.5890,.5278],[.4166,.4235],[.6165,.5530],[.5156,.3774],[.5682,.6061],[.5102,.6027],[.6057,.7384],[.6218,.7426],[.5122,.9005],[.5685,.9083]],
+  [[.4387,.3541],[.4523,.3396],[.4150,.3436],[.4806,.3427],[.3828,.3513],[.5587,.4105],[.3827,.4283],[.6442,.4994],[.3941,.5405],[.6157,.5909],[.4180,.6307],[.5878,.6139],[.4697,.6208],[.5953,.7638],[.4573,.7727],[.6016,.9122],[.4490,.9196]],
+  [[.5203,.3498],[.5382,.3404],[.5055,.3367],[.5578,.3554],[.4782,.3463],[.6036,.4302],[.4019,.4079],[.6497,.5132],[.3063,.4790],[.6396,.4526],[.3674,.4335],[.5408,.5954],[.4132,.5881],[.5248,.7542],[.4095,.7452],[.5123,.9230],[.4180,.9192]],
 ];
 
 const state = {
   mode: "demo",
+  focus: "upper",
   playing: false,
   analyzing: false,
   speedIndex: 0,
@@ -85,10 +115,14 @@ const state = {
   remoteLearning: null,
   lastSocketSentAt: 0,
   routineKeyframes: REFERENCE_KEYFRAMES,
+  sourceDuration: SOURCE_DURATION_SECONDS,
+  sourceMotionReady: false,
+  previousSourceTime: 0,
 };
 
 const elements = {
   referenceCanvas: $("#referenceCanvas"),
+  referenceVideo: $("#referenceVideo"),
   liveCanvas: $("#liveCanvas"),
   captureCanvas: $("#captureCanvas"),
   cameraVideo: $("#cameraVideo"),
@@ -136,6 +170,13 @@ const elements = {
   policyVersion: $("#policyVersion"),
   policyStatus: $("#policyStatus"),
   policyRule: $("#policyRule"),
+  learningStepNumber: $("#learningStepNumber"),
+  learningStepTitle: $("#learningStepTitle"),
+  learningStepHint: $("#learningStepHint"),
+  nextFocusButton: $("#nextFocusButton"),
+  sourceOverlayLabel: $("#sourceOverlayLabel"),
+  sourceBadge: $("#sourceBadge"),
+  focusLabel: $("#focusLabel"),
   chartLine: $("#chartLine"),
   chartArea: $("#chartArea"),
   privacyDialog: $("#privacyDialog"),
@@ -175,6 +216,69 @@ function getReferencePose(phase) {
   ]);
 }
 
+async function loadSourceMotion() {
+  try {
+    const response = await fetch(SOURCE_POSE_PATH);
+    if (!response.ok) throw new Error(`Pose track failed (${response.status})`);
+    const payload = await response.json();
+    const poses = payload.poses?.filter((pose) => Array.isArray(pose) && pose.length >= 17);
+    if (!poses || poses.length < 8) throw new Error("Pose track is incomplete");
+    state.routineKeyframes = poses;
+    state.sourceDuration = Number(payload.duration) || SOURCE_DURATION_SECONDS;
+    state.sourceMotionReady = true;
+    elements.sourceBadge.innerHTML = "<i></i> ML track ready";
+  } catch {
+    state.routineKeyframes = REFERENCE_KEYFRAMES;
+    elements.sourceBadge.innerHTML = "<i></i> ML fallback track";
+    showBanner("The dense local pose track could not load, so the sampled ML overlay is being used.");
+  }
+}
+
+function updateFocusUI() {
+  const index = Math.max(0, FOCUS_STEPS.findIndex((step) => step.id === state.focus));
+  const step = FOCUS_STEPS[index];
+  elements.learningStepNumber.textContent = `Step ${index + 1} of ${FOCUS_STEPS.length}`;
+  elements.learningStepTitle.textContent = step.title;
+  elements.learningStepHint.textContent = step.hint;
+  elements.sourceOverlayLabel.textContent = step.overlay;
+  elements.focusLabel.textContent = `Focus · ${step.id === "full" ? "full body" : `${step.id} body only`}`;
+  elements.nextFocusButton.textContent = index === FOCUS_STEPS.length - 1
+    ? "Restart: upper body"
+    : `Next: ${FOCUS_STEPS[index + 1].id} body`;
+  elements.nextFocusButton.classList.toggle("complete", index === FOCUS_STEPS.length - 1);
+  $$(".focus-step").forEach((button) => {
+    const active = button.dataset.focus === state.focus;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-pressed", String(active));
+  });
+}
+
+function setFocus(focus, { announce = true } = {}) {
+  if (!FOCUS_STEPS.some((step) => step.id === focus)) return;
+  pausePractice();
+  state.focus = focus;
+  state.phase = 0;
+  state.currentCount = 1;
+  state.previousSourceTime = 0;
+  state.score = null;
+  state.boneScores = {};
+  elements.referenceVideo.currentTime = 0;
+  elements.attentionMetric.textContent = focus === "upper" ? "Arms + shoulders" : focus === "lower" ? "Hips + legs" : "Whole body";
+  elements.attentionDelta.textContent = "Only this learning step is scored";
+  elements.coachMessage.textContent = focus === "upper"
+    ? "First, copy only the coach’s arms and shoulders. Ignore the legs for this pass."
+    : focus === "lower"
+      ? "Now copy only the weight shifts, knees, and feet. Ignore the arms for this pass."
+      : "Now combine the upper- and lower-body patterns into the complete move.";
+  elements.messageConfidence.textContent = "one focus only";
+  elements.coachCue.hidden = false;
+  elements.policyRule.textContent = `Score only the ${focus === "full" ? "combined move" : `${focus} body`} in this step.`;
+  updateFocusUI();
+  updateCountUI();
+  updateScoreUI();
+  if (announce) toast(`${FOCUS_STEPS.find((step) => step.id === focus).title} · video reset to the start`);
+}
+
 function createDemoPose(reference, timestamp) {
   const pose = clonePose(reference);
   const progress = clamp((state.elapsedPlayingMs - 900) / 6800);
@@ -206,9 +310,15 @@ function cosineSimilarity(a, b) {
   return clamp(dot / (lengthA * lengthB));
 }
 
-function calculatePoseScore(live, reference, demoPenalty = 0) {
+function boneMatchesFocus(bone, focus = state.focus) {
+  const lowerBody = bone.name.includes("thigh") || bone.name.includes("shin");
+  return focus === "full" || (focus === "lower" ? lowerBody : !lowerBody);
+}
+
+function calculatePoseScore(live, reference, demoPenalty = 0, focus = state.focus) {
   const boneScores = {};
-  for (const bone of SCORE_BONES) {
+  const focusedBones = SCORE_BONES.filter((bone) => boneMatchesFocus(bone, focus));
+  for (const bone of focusedBones) {
     const [start, end] = bone.pair;
     if (!live[start] || !live[end] || !reference[start] || !reference[end]) {
       boneScores[bone.name] = 0;
@@ -219,7 +329,7 @@ function calculatePoseScore(live, reference, demoPenalty = 0) {
     boneScores[bone.name] = clamp(cosineSimilarity(liveVector, refVector) - demoPenalty);
   }
   return {
-    score: Object.values(boneScores).reduce((sum, value) => sum + value, 0) / SCORE_BONES.length,
+    score: Object.values(boneScores).reduce((sum, value) => sum + value, 0) / focusedBones.length,
     boneScores,
   };
 }
@@ -240,8 +350,28 @@ function resizeCanvas(canvas) {
   return { context, width: rect.width, height: rect.height };
 }
 
-function mappedPoint(point, width, height) {
+function mappedPoint(point, width, height, sourceAspect = null) {
+  if (sourceAspect) {
+    const contentWidth = Math.min(width, height * sourceAspect);
+    const contentHeight = Math.min(height, width / sourceAspect);
+    return [
+      (width - contentWidth) / 2 + point[0] * contentWidth,
+      (height - contentHeight) / 2 + point[1] * contentHeight,
+    ];
+  }
   return [width * (0.07 + point[0] * 0.86), height * (0.035 + point[1] * 0.92)];
+}
+
+function jointMatchesFocus(index, focus) {
+  if (focus === "upper") return index <= 12;
+  if (focus === "lower") return index >= 11;
+  return true;
+}
+
+function skeletonBoneMatchesFocus(pair, focus) {
+  if (focus === "upper") return pair[0] <= 12 && pair[1] <= 12;
+  if (focus === "lower") return pair[0] >= 11 && pair[1] >= 11;
+  return true;
 }
 
 function colorForScore(score) {
@@ -267,17 +397,19 @@ function renderSkeleton(canvas, pose, options = {}) {
   const resized = resizeCanvas(canvas);
   if (!resized || !pose?.length) return;
   const { context: ctx, width, height } = resized;
-  const points = pose.map((point) => mappedPoint(point, width, height));
+  const focus = options.focus || "full";
+  const points = pose.map((point) => mappedPoint(point, width, height, options.sourceAspect));
   const primary = options.primary || "#b7ff5a";
   const boneScores = options.boneScores || {};
 
   if (options.trailPose) {
-    const trailPoints = options.trailPose.map((point) => mappedPoint(point, width, height));
+    const trailPoints = options.trailPose.map((point) => mappedPoint(point, width, height, options.sourceAspect));
     ctx.save();
     ctx.globalAlpha = 0.12;
     ctx.strokeStyle = primary;
     ctx.lineWidth = 2;
     for (const [start, end] of COCO_BONES) {
+      if (!skeletonBoneMatchesFocus([start, end], focus)) continue;
       ctx.beginPath();
       ctx.moveTo(...trailPoints[start]);
       ctx.lineTo(...trailPoints[end]);
@@ -287,6 +419,7 @@ function renderSkeleton(canvas, pose, options = {}) {
   }
 
   for (const pair of COCO_BONES) {
+    if (!skeletonBoneMatchesFocus(pair, focus)) continue;
     const [start, end] = pair;
     if (!points[start] || !points[end]) continue;
     const score = scoreForBone(pair, boneScores);
@@ -305,6 +438,7 @@ function renderSkeleton(canvas, pose, options = {}) {
   }
 
   points.forEach(([x, y], index) => {
+    if (!jointMatchesFocus(index, focus)) return;
     const jointScore = scoreForJoint(index, boneScores);
     const color = options.feedback ? colorForScore(jointScore) : primary;
     if (options.feedback && jointScore != null && jointScore < 0.78) {
@@ -327,6 +461,7 @@ function renderSkeleton(canvas, pose, options = {}) {
   });
 
   // A subtle center-of-mass guide makes the pose output feel analytical.
+  if (focus !== "full") return;
   const hipCenter = [(points[11][0] + points[12][0]) / 2, (points[11][1] + points[12][1]) / 2];
   ctx.save();
   ctx.setLineDash([2, 5]);
@@ -375,13 +510,13 @@ function updateScoreUI() {
 function updateTimingUI() {
   state.timingOffset = null;
   if (state.mode === "camera") {
-    elements.timingMetric.textContent = "--";
-    elements.timingDelta.textContent = "Timing analysis not implemented";
+    elements.timingMetric.textContent = state.playing ? `${elements.referenceVideo.currentTime.toFixed(1)}s` : "--";
+    elements.timingDelta.textContent = "Video, audio, and overlay share one clock";
     return;
   }
   if (!state.playing) return;
-  elements.timingMetric.textContent = "Scripted";
-  elements.timingDelta.textContent = "Demo timing preview";
+  elements.timingMetric.textContent = `${elements.referenceVideo.currentTime.toFixed(1)}s`;
+  elements.timingDelta.textContent = "Synced to source audio";
 }
 
 function updateCountUI() {
@@ -420,28 +555,33 @@ function updateAgentUI() {
     elements.coachMessage.textContent = state.remoteCoaching;
     elements.messageConfidence.textContent = "server policy";
   } else if (state.remoteSession) {
-    elements.coachMessage.textContent = "Evaluating this loop against your learned movement profile.";
+    elements.coachMessage.textContent = `Evaluating only your ${state.focus === "full" ? "combined movement" : `${state.focus} body`} in this step.`;
     elements.messageConfidence.textContent = "agent evaluating";
   } else if (elapsed < 900) {
-    elements.coachMessage.textContent = "Reading your range, rhythm, and stable joints. Keep moving naturally.";
-    elements.messageConfidence.textContent = "scripted setup";
-  } else if (elapsed < 3600) {
-    elements.coachMessage.textContent = "Lift your right wrist through the count instead of reaching sideways.";
-    elements.messageConfidence.textContent = "scripted demo cue";
-  } else if (elapsed < 7200) {
-    elements.coachMessage.textContent = "That wrist path is cleaner. Land the left knee a fraction earlier on count six.";
-    elements.messageConfidence.textContent = "scripted demo cue";
+    elements.coachMessage.textContent = state.focus === "upper"
+      ? "Watch only the purple arm and shoulder lines over the coach. Ignore the legs."
+      : state.focus === "lower"
+        ? "Watch only the purple hip, knee, and ankle lines. Ignore the arms."
+        : "Combine the two patterns now; keep the same timing as the source audio.";
+    elements.messageConfidence.textContent = "one focus only";
   } else {
-    elements.coachMessage.textContent = "Your shape is stable at this tempo. Repeat two clean loops to unlock the next speed.";
-    elements.messageConfidence.textContent = "scripted demo cue";
+    const weakest = SCORE_BONES
+      .filter((bone) => boneMatchesFocus(bone))
+      .map((bone) => ({ ...bone, score: state.boneScores[bone.name] }))
+      .filter((bone) => Number.isFinite(bone.score))
+      .sort((a, b) => a.score - b.score)[0];
+    elements.coachMessage.textContent = weakest
+      ? `One change: match the coach’s ${weakest.label.toLowerCase()} path. Keep everything else unchanged.`
+      : `Keep following only the ${state.focus === "full" ? "combined move" : `${state.focus}-body pattern`}.`;
+    elements.messageConfidence.textContent = "single active cue";
   }
-  elements.coachCue.hidden = elapsed < 900;
+  elements.coachCue.hidden = false;
 
   if (!state.remoteSession) {
     const desiredMemories = [];
-    if (elapsed >= 1100) desiredMemories.push({ title: "Scripted right-wrist pattern", detail: "Demo fallback cue", score: "preview" });
-    if (elapsed >= 3200) desiredMemories.push({ title: "Demo cue preference", detail: "Scripted fallback state", score: "preview" });
-    if (elapsed >= 5900) desiredMemories.push({ title: "Scripted timing preview", detail: "Not measured from audio", score: "demo" });
+    if (elapsed >= 1100) desiredMemories.push({ title: `${FOCUS_STEPS.find((step) => step.id === state.focus).title} active`, detail: "Other body regions excluded from scoring", score: "isolated" });
+    if (elapsed >= 3200) desiredMemories.push({ title: "Source-synced coach path", detail: "YOLO landmarks follow the local tutorial video", score: "ML" });
+    if (elapsed >= 5900) desiredMemories.push({ title: "Audio timing available", detail: "Video and pose track share one clock", score: "synced" });
     if (desiredMemories.length !== state.memories.length) {
       state.memories = desiredMemories;
       renderMemories();
@@ -455,13 +595,13 @@ function updateAgentUI() {
     elements.policyRule.textContent = "Waiting for enough live evidence to revise the coaching policy.";
     elements.policyStatus.textContent = "Evaluating";
   } else if (elapsed < 2500) {
-    elements.policyRule.innerHTML = "<b>Baseline:</b> scan full body equally.";
+    elements.policyRule.innerHTML = `<b>Step ${FOCUS_STEPS.findIndex((step) => step.id === state.focus) + 1}:</b> score ${state.focus === "full" ? "the combined move" : `${state.focus} body only`}.`;
     elements.policyStatus.textContent = "Learning";
   } else if (elapsed < 6500) {
-    elements.policyRule.innerHTML = "<b>Updated:</b> prioritize right-arm path for 2 counts.";
+    elements.policyRule.innerHTML = "<b>Updated:</b> show one weakest joint cue at a time.";
     elements.policyStatus.textContent = "Applied";
   } else {
-    elements.policyRule.innerHTML = "<b>Updated:</b> fade solved cues; shift attention to timing.";
+    elements.policyRule.innerHTML = "<b>Updated:</b> retain this body focus until you choose the next step.";
     elements.policyStatus.textContent = "Applied";
   }
 }
@@ -534,6 +674,7 @@ function handleCompletedLoop() {
 }
 
 function updateSpeedUI(previousIndex = null) {
+  elements.referenceVideo.playbackRate = SPEEDS[state.speedIndex];
   $$(".speed-tier").forEach((button, index) => {
     button.classList.toggle("active", index === state.speedIndex);
     if (previousIndex != null && index <= previousIndex) button.classList.add("passed");
@@ -759,8 +900,9 @@ async function ensureSession(routineUrl = elements.routineUrl.value.trim()) {
     method: "POST",
     body: JSON.stringify({
       routine_url: routineUrl || null,
-      mode: state.mode,
-      focus: FOCUS,
+      mode: state.focus,
+      practice_mode: state.mode,
+      focus: state.focus,
       privacy: { store_frames: false, memory_scope: "session" },
       client: "tempodance-static-spa",
     }),
@@ -790,7 +932,7 @@ async function postObservation() {
     mode: state.mode,
     count: state.currentCount,
     speed: SPEEDS[state.speedIndex],
-    focus: FOCUS,
+    focus: state.focus,
     score: state.score,
     bone_scores: state.boneScores,
     reference_keypoints: state.latestReference,
@@ -868,7 +1010,7 @@ function sendCameraFrame(now) {
   const message = {
     image,
     reference_keypoints: state.latestReference,
-    focus: FOCUS,
+    focus: state.focus,
     session_id: state.sessionId,
   };
   state.lastSocketSentAt = now;
@@ -894,6 +1036,22 @@ function setConnection(kind) {
   }
 }
 
+function extractYouTubeVideoId(url) {
+  try {
+    const parsed = new URL(url);
+    if (parsed.hostname === "youtu.be") return parsed.pathname.split("/").filter(Boolean)[0] || null;
+    if (parsed.hostname.endsWith("youtube.com")) {
+      if (parsed.pathname.startsWith("/shorts/") || parsed.pathname.startsWith("/embed/")) {
+        return parsed.pathname.split("/").filter(Boolean)[1] || null;
+      }
+      return parsed.searchParams.get("v");
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
+
 async function analyzeRoutine() {
   if (state.analyzing) return;
   const url = elements.routineUrl.value.trim();
@@ -901,7 +1059,12 @@ async function analyzeRoutine() {
     const parsed = new URL(url);
     if (!/^https?:$/.test(parsed.protocol)) throw new Error();
   } catch {
-    showBanner("Paste a valid http(s) video URL. The built-in 8-count remains ready for Demo mode.");
+    showBanner("Paste a valid YouTube URL.");
+    elements.routineUrl.focus();
+    return;
+  }
+  if (extractYouTubeVideoId(url) !== SOURCE_VIDEO_ID) {
+    showBanner(`This build packages ${SOURCE_VIDEO_ID}. Run scripts/process_tutorial.py to generate local video and pose assets for a different tutorial.`);
     elements.routineUrl.focus();
     return;
   }
@@ -921,17 +1084,18 @@ async function analyzeRoutine() {
   const remaining = 950 - (performance.now() - started);
   if (remaining > 0) await new Promise((resolve) => window.setTimeout(resolve, remaining));
 
-  let hostname = "Imported video";
-  try { hostname = new URL(url).hostname.replace(/^www\./, ""); } catch { /* validated above */ }
-  elements.routineName.textContent = `${hostname} noted · built-in 8-count`;
-  elements.routineBpm.textContent = "112";
+  elements.referenceVideo.pause();
+  elements.referenceVideo.currentTime = 0;
+  state.phase = 0;
+  state.previousSourceTime = 0;
+  elements.routineName.textContent = "Hollywood Action · mirrored tutorial";
+  elements.routineBpm.textContent = "0.8×";
   elements.referenceLoading.hidden = true;
   elements.analyzeButton.classList.remove("loading");
   elements.analyzeButton.disabled = false;
   elements.analyzeButton.querySelector(".button-label").textContent = "Prepared";
   state.analyzing = false;
-  toast(state.remoteSession ? "Practice session linked · built-in reference loaded" : "Built-in practice loop ready · backend optional");
-  if (!state.remoteSession) showBanner("Backend did not answer, so the deterministic browser demo took over. Every pitch interaction still works.");
+  toast(state.remoteSession ? "Local video, audio, and ML pose track ready" : "Local source and ML pose track ready · backend optional");
 }
 
 async function setMode(mode) {
@@ -955,7 +1119,7 @@ async function setMode(mode) {
   elements.liveBadge.innerHTML = mode === "demo" ? "<i></i> Ready" : "<i></i> Camera off";
   elements.latencyLabel.textContent = mode === "demo" ? "Local simulation · 0 ms" : "Waiting for camera";
   elements.timingMetric.textContent = "--";
-  elements.timingDelta.textContent = mode === "demo" ? "Demo timing is scripted" : "Timing analysis not implemented";
+  elements.timingDelta.textContent = "Video, audio, and overlay share one clock";
   setConnection(mode === "demo" ? "demo" : "connecting");
   if (mode === "camera" && state.cameraReady) connectSocket();
 }
@@ -1009,18 +1173,26 @@ async function startPractice() {
     if (!state.cameraReady) return;
   }
   ensureSession();
+  elements.referenceVideo.playbackRate = SPEEDS[state.speedIndex];
+  try {
+    await elements.referenceVideo.play();
+  } catch {
+    showBanner("The browser blocked video playback. Press play again to allow the tutorial audio.");
+    return;
+  }
   state.playing = true;
   state.sessionStartedAt ??= Date.now();
   state.lastFrameAt = performance.now();
   elements.playButton.classList.add("playing");
   elements.playButton.setAttribute("aria-label", "Pause practice");
   elements.transportTitle.textContent = `Loop ${state.completedLoops + 1} · count ${state.currentCount}`;
-  elements.transportHint.textContent = "Hold the shape through each beat; the coach watches consistency.";
+  elements.transportHint.textContent = `Follow only the ${state.focus === "full" ? "combined move" : `${state.focus}-body overlay`} with the source audio.`;
   if (state.mode === "camera") connectSocket();
 }
 
 function pausePractice() {
   state.playing = false;
+  elements.referenceVideo.pause();
   elements.playButton.classList.remove("playing");
   elements.playButton.setAttribute("aria-label", "Start practice");
   if (Number.isFinite(state.score)) {
@@ -1032,8 +1204,10 @@ function pausePractice() {
 function resetSession({ keepMode = true } = {}) {
   pausePractice();
   stopCamera();
+  elements.referenceVideo.currentTime = 0;
   Object.assign(state, {
     mode: keepMode ? state.mode : "demo",
+    focus: "upper",
     phase: 0,
     currentCount: 1,
     completedLoops: 0,
@@ -1055,18 +1229,15 @@ function resetSession({ keepMode = true } = {}) {
     remoteLearning: null,
     observationInFlight: false,
     speedIndex: 0,
+    previousSourceTime: 0,
   });
   elements.cleanLoops.textContent = "0";
   elements.sessionClock.textContent = "00:00";
   elements.timingMetric.textContent = "--";
-  elements.timingDelta.textContent = "Demo timing is scripted";
-  elements.attentionMetric.textContent = "None yet";
-  elements.attentionDelta.textContent = "Full-body scan";
+  elements.timingDelta.textContent = "Synced to source audio";
   elements.transportTitle.textContent = "Ready for your first loop";
   elements.transportHint.textContent = "Press play — the coach will adapt after each pass.";
-  elements.coachMessage.textContent = "Start a loop and I’ll find the smallest correction with the biggest impact.";
-  elements.messageConfidence.textContent = "calibrating";
-  elements.coachCue.hidden = true;
+  elements.coachCue.hidden = false;
   elements.policyVersion.textContent = "Policy v1.0";
   elements.policyRule.innerHTML = "<b>Baseline:</b> scan full body equally.";
   elements.chartLine.setAttribute("d", "");
@@ -1075,6 +1246,7 @@ function resetSession({ keepMode = true } = {}) {
   updateSpeedUI();
   updateScoreUI();
   updateCountUI();
+  setFocus("upper", { announce: false });
   if (!keepMode) {
     elements.demoModeButton.classList.add("active");
     elements.demoModeButton.setAttribute("aria-pressed", "true");
@@ -1113,10 +1285,18 @@ function tick(now) {
   if (state.playing) {
     state.elapsedPlayingMs += delta;
     const speed = SPEEDS[state.speedIndex];
-    const loopDuration = (BASE_BEAT_MS * 8) / speed;
     const previousPhase = state.phase;
-    state.phase = (state.phase + delta / loopDuration) % 1;
-    if (state.phase < previousPhase) handleCompletedLoop();
+    const sourceDuration = elements.referenceVideo.duration || state.sourceDuration;
+    if (elements.referenceVideo.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA && sourceDuration > 0) {
+      const sourceTime = elements.referenceVideo.currentTime;
+      state.phase = clamp(sourceTime / sourceDuration);
+      if (sourceTime + .25 < state.previousSourceTime) handleCompletedLoop();
+      state.previousSourceTime = sourceTime;
+    } else {
+      const loopDuration = (state.sourceDuration * 1000) / speed;
+      state.phase = (state.phase + delta / loopDuration) % 1;
+      if (state.phase < previousPhase) handleCompletedLoop();
+    }
     state.currentCount = Math.min(8, Math.floor(state.phase * 8) + 1);
     state.loopMinimum = Math.min(state.loopMinimum, state.score ?? 1);
     elements.transportTitle.textContent = `Loop ${state.completedLoops + 1} · count ${state.currentCount}`;
@@ -1124,8 +1304,14 @@ function tick(now) {
   }
 
   state.latestReference = getReferencePose(state.phase);
-  const trailReference = getReferencePose((state.phase - .035 + 1) % 1);
-  renderSkeleton(elements.referenceCanvas, state.latestReference, { primary: "#a98aff", trailPose: trailReference });
+  const trailOffset = 1 / state.routineKeyframes.length;
+  const trailReference = getReferencePose((state.phase - trailOffset + 1) % 1);
+  renderSkeleton(elements.referenceCanvas, state.latestReference, {
+    primary: "#a98aff",
+    trailPose: trailReference,
+    focus: state.focus,
+    sourceAspect: SOURCE_ASPECT_RATIO,
+  });
 
   if (state.mode === "demo") {
     state.latestLive = createDemoPose(state.latestReference, now);
@@ -1137,7 +1323,8 @@ function tick(now) {
       primary: "#b7ff5a",
       feedback: true,
       boneScores: state.boneScores,
-      trailPose: createDemoPose(getReferencePose((state.phase - .035 + 1) % 1), now - 35),
+      trailPose: createDemoPose(getReferencePose((state.phase - trailOffset + 1) % 1), now - 35),
+      focus: state.focus,
     });
   } else if (state.serverPose) {
     state.latestLive = state.serverPose;
@@ -1146,7 +1333,7 @@ function tick(now) {
       state.score = localResult.score;
       state.boneScores = localResult.boneScores;
     }
-    renderSkeleton(elements.liveCanvas, state.serverPose, { primary: "#b7ff5a", feedback: true, boneScores: state.boneScores });
+    renderSkeleton(elements.liveCanvas, state.serverPose, { primary: "#b7ff5a", feedback: true, boneScores: state.boneScores, focus: state.focus });
   } else {
     clearCanvas(elements.liveCanvas);
   }
@@ -1183,11 +1370,19 @@ function initialize() {
   elements.cameraModeButton.addEventListener("click", () => setMode("camera"));
   elements.enableCameraButton.addEventListener("click", enableCamera);
   elements.useDemoFallbackButton.addEventListener("click", () => setMode("demo"));
+  $$(".focus-step").forEach((button) => {
+    button.addEventListener("click", () => setFocus(button.dataset.focus));
+  });
+  elements.nextFocusButton.addEventListener("click", () => {
+    const index = FOCUS_STEPS.findIndex((step) => step.id === state.focus);
+    setFocus(FOCUS_STEPS[(index + 1) % FOCUS_STEPS.length].id);
+  });
   $$(".speed-tier").forEach((button, index) => {
     button.addEventListener("click", () => {
       const wasHigher = index > state.speedIndex;
       state.speedIndex = index;
       state.cleanLoops = 0;
+      elements.referenceVideo.playbackRate = SPEEDS[index];
       elements.cleanLoops.textContent = "0";
       updateSpeedUI();
       toast(wasHigher ? `Manual control · speed set to ${SPEEDS[index].toFixed(1)}×` : `Coach speed set to ${SPEEDS[index].toFixed(1)}×`);
@@ -1208,6 +1403,16 @@ function initialize() {
   }, { passive: true });
 
   renderMemories();
+  elements.referenceVideo.loop = true;
+  elements.referenceVideo.playbackRate = SPEEDS[state.speedIndex];
+  elements.referenceVideo.addEventListener("error", () => {
+    showBanner("The packaged tutorial video could not load. Re-run scripts/process_tutorial.py to restore it.");
+  });
+  elements.referenceVideo.addEventListener("loadedmetadata", () => {
+    state.sourceDuration = elements.referenceVideo.duration || state.sourceDuration;
+  });
+  loadSourceMotion();
+  setFocus("upper", { announce: false });
   updateCountUI();
   requestAnimationFrame(tick);
 }
