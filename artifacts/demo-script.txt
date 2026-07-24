@@ -1,0 +1,7 @@
+Dance tutorials show the move, but they cannot see why you miss it. TempoDance turns the exact source video into a synchronized, thirty-frame-per-second pose coach.
+
+Practice begins with one job: upper body. Then lower body. No cognitive overload, and every count stays tied to the music and detected beat.
+
+When you are ready, put it together. The local pose engine compares limb geometry, finds the weakest joint, and gives one correction at a time.
+
+Session memory checks whether that correction worked before changing the policy or speed. TempoDance AI: the coach that learns how you learn.

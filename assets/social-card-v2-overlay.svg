@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1350" viewBox="0 0 1080 1350">
+  <rect y="607" width="1080" height="743" fill="#08080c"/>
+  <rect x="40" y="40" width="1000" height="1270" rx="28" fill="none" stroke="#fff" stroke-opacity=".12" stroke-width="2"/>
+  <g transform="translate(74 690)" font-family="Inter, -apple-system, Helvetica, Arial, sans-serif">
+    <text fill="#b7ff5a" font-size="20" font-weight="780" letter-spacing="4">SOURCE-SYNCED POSE COACHING</text>
+    <text y="106" fill="#f7f7fa" font-size="72" font-weight="760" letter-spacing="-3">
+      <tspan x="0">Upper.</tspan><tspan x="0" dy="82">Lower.</tspan><tspan x="0" dy="82">Together.</tspan>
+    </text>
+    <text y="405" fill="#aaaab6" font-size="27">One correction at a time.</text>
+    <line x1="0" y1="462" x2="930" y2="462" stroke="#fff" stroke-opacity=".12"/>
+    <text y="535" fill="#f7f7fa" font-size="32" font-weight="720">TempoDance <tspan fill="#b7ff5a">AI</tspan></text>
+    <text x="930" y="535" text-anchor="end" fill="#777784" font-size="20" font-weight="650">30 FPS · 114 BPM</text>
+  </g>
+</svg>

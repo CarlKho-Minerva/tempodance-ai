@@ -80,13 +80,13 @@ TempoDance converts practice into a closed feedback loop. It measures body geome
 
 ### Architecture and autonomous loop
 
-The browser presents a built-in COCO-17 reference and learner skeleton plus pose score, per-bone alignment, attention target, session memory, policy version, speed, and clean-loop streak. A deterministic geometry engine compares normalized bone directions, handles mirror orientation, and confidence-gates missing joints. At each reliable loop boundary, the server aggregates per-bone medians, selects a weak-motion focus, and retains or rotates among predefined coaching rules; scoring weights and mastery gates remain fixed.
+The browser presents the supplied tutorial with a source-rate 30 FPS COCO-17 overlay, detected audio counts, isolated upper/lower/full learning steps, and a learner skeleton with pose score, per-bone alignment, attention target, session memory, policy version, speed, and clean-loop streak. A deterministic geometry engine compares normalized bone directions, handles mirror orientation, and confidence-gates missing joints. At each reliable loop boundary, the server aggregates per-bone medians, selects a weak-motion focus, and retains or rotates among predefined coaching rules; scoring weights and mastery gates remain fixed.
 
 The no-camera demo uses scripted landmark perturbations and a browser cosine scorer. With the local API connected, its score and per-bone values feed the server-side policy and mastery session; without the API, a scripted UI fallback keeps the walkthrough usable. An optional Fireworks adapter can parse a structured routine plan from caller-provided frame images, but it is not connected to coaching or mastery.
 
 ### What was built during the July 24 event
 
-TempoDance's concept and architecture blueprint existed before the event. During the July 24 build session, the team implemented the judge-facing workspace, scale-invariant pose comparison, confidence-aware loop summaries, adaptive mastery state machine, visible memory and policy versions, deterministic fallback flow, and optional analysis-provider boundary. The central event-day implementation is an evidence-driven agent loop that changes the next focus or cue strategy from the next loop's target delta rather than rewriting a prompt.
+TempoDance's concept and architecture blueprint existed before the event. During the July 24 build session, the team implemented the judge-facing workspace, source-video download/transcode and 30 FPS pose-extraction pipeline, detected beat grid, stepwise upper/lower/full coaching, scale-invariant pose comparison, confidence-aware loop summaries, adaptive mastery state machine, visible memory and policy versions, deterministic fallback flow, and optional analysis-provider boundary. The central event-day implementation is an evidence-driven agent loop that changes the next focus or cue strategy from the next loop's target delta rather than rewriting a prompt.
 
 That disclosure is also the reason organizer approval is required. Do not soften it or present the project as starting from zero.
 

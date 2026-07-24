@@ -1,6 +1,6 @@
 # TempoDance AI
 
-![TempoDance AI cover](assets/cover.png)
+![TempoDance AI cover featuring the source-synced coaching workspace](assets/cover.png)
 
 TempoDance AI is a self-evolving dance coach. It compares a learner's body geometry with a source-synchronized tutorial pose, identifies the lowest-scoring tracked limb, and evaluates its coaching focus after each completed server-side loop.
 
@@ -66,7 +66,9 @@ The script downloads into a temporary directory, transcodes the source to browse
 
 ![TempoDance AI judge demo showing policy memory and automatic 0.6x progression](artifacts/judge-demo-final.png)
 
-- [24-second narrated backup demo](artifacts/tempodance-demo-voiced.mp4)
-- [Silent screen-recording source](artifacts/tempodance-demo-raw.mp4)
+- [29-second male-voiced demo with source audio](artifacts/tempodance-demo-voiced.mp4)
+- [29-second voice-only fallback](artifacts/tempodance-demo-voiced-clean.mp4)
+- [Silent editable screen-recording master](artifacts/tempodance-demo-raw.mp4)
+- [YouTube/X upload copy and final media checklist](docs/UPLOAD_COPY.md)
 
 See [SUBMISSION.md](SUBMISSION.md) for copy, the three-minute pitch, demo recovery, and the two hackathon angles.

@@ -36,7 +36,7 @@ The private dance coach that measures every loop—and learns how to teach you b
 
 ### Two-to-three-sentence summary
 
-TempoDance AI is a local-first prototype that compares a learner with a built-in animated COCO-17 eight-count, identifies the lowest-scoring tracked limb, and evaluates the next loop's target delta. Its session memory and policy events are visible, and automatic speed progression requires stable mastery. A scripted Demo mode works without a camera, pose-model download, or cloud dependency.
+TempoDance AI is a local-first prototype that turns a supplied tutorial into a source-synchronized 30 FPS COCO-17 coach, identifies the learner's lowest-scoring tracked limb, and evaluates the next loop's target delta. It teaches upper body, lower body, then the complete move to limit cognitive overload; session memory and policy events remain visible. A deterministic Demo mode works without a camera, pose-model download, or cloud dependency.
 
 ### Problem and impact
 
@@ -46,7 +46,7 @@ TempoDance turns each practice loop into an evaluated coaching trial. It finds t
 
 ### Architecture and components
 
-TempoDance separates measurement, coaching policy, and mastery. A browser workspace renders a built-in COCO-17 reference and learner skeleton and exposes pose score, per-bone alignment, selected focus, session memory, policy version, speed, and clean-loop streak. The live/API Python scorer compares normalized bone-direction vectors, handles mirror orientation, and confidence-gates missing joints; loop summaries feed an adaptive mastery state machine that moves through `0.5x → 0.6x → 0.8x → 1.0x` only after repeated qualifying evidence.
+TempoDance separates source extraction, measurement, coaching policy, and mastery. A browser workspace renders the packaged tutorial, its source-rate pose overlay, detected beat count, and learner skeleton while exposing pose score, per-bone alignment, selected focus, session memory, policy version, speed, and clean-loop streak. The live/API Python scorer compares normalized bone-direction vectors, handles mirror orientation, and confidence-gates missing joints; loop summaries feed an adaptive mastery state machine that moves through `0.25x → 0.5x → 0.6x → 0.8x → 1.0x` only after repeated qualifying evidence.
 
 The no-camera path uses scripted landmark perturbations and a browser cosine scorer. With the local API connected, its score and per-bone values feed the server-side policy and mastery session; without the API, a scripted UI fallback keeps the walkthrough usable. Live camera frames use the Python pose/scoring path. An optional server adapter can send caller-provided frame images to Fireworks and parse a structured routine plan, but the browser does not yet supply those frames or display that result. Coaching cues and mastery are deterministic.
 
@@ -54,7 +54,7 @@ Before submitting, verify that the final running build supports every sentence a
 
 ### What was genuinely new on July 24, 2026
 
-Before the event, TempoDance existed as a concept and architecture blueprint. During the hackathon we built its first working prototype: the judge-facing practice workspace, scale-invariant COCO-17 comparison with confidence and mirror handling, loop-level mastery gates, visible session memory and policy versions, deterministic failure-safe demo, and the optional provider boundary for routine analysis. The specifically new event-day feature is the evidence-driven coaching policy loop: it diagnoses a repeated weak motion, changes the next focus or cue strategy, evaluates the next loop's target delta, and unlocks speed only after consecutive qualifying loops.
+Before the event, TempoDance existed as a concept and architecture blueprint. During the hackathon we built its first working prototype: the judge-facing practice workspace; YouTube download, browser transcode, 30 FPS pose extraction, and beat-alignment pipeline; isolated upper/lower/full-body learning flow; scale-invariant COCO-17 comparison with confidence and mirror handling; loop-level mastery gates; visible session memory and policy versions; deterministic failure-safe demo; and the optional provider boundary for routine analysis. The specifically new event-day feature is the evidence-driven coaching policy loop: it diagnoses a repeated weak motion, changes the next focus or cue strategy, evaluates the next loop's target delta, and unlocks speed only after consecutive qualifying loops.
 
 Do not use that paragraph if any listed implementation predates the event or is not present in the submitted repository. Replace it with the narrower, provable event-day change and point judges to its commits.
 

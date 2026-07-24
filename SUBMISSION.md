@@ -2,9 +2,9 @@
 
 ## Copy-paste project description
 
-**TempoDance AI** is a local-first dance coach. In the default localhost setup, a pose model turns webcam frames into landmarks; a scale-invariant scorer compares normalized limb directions with a built-in animated eight-count; and a session policy uses per-bone loop medians to choose a focus and coaching rule. It records whether the targeted metric improved and automatically raises speed only after stable mastery.
+**TempoDance AI** is a local-first dance coach. It packages a supplied tutorial with audio, overlays a source-rate 30 FPS COCO-17 pose track, and teaches the move in three deliberate steps: upper body, lower body, then the complete motion. A scale-invariant scorer compares normalized limb directions, while a session policy uses per-bone loop medians to choose one coaching cue and test whether it worked before adapting.
 
-Most movement apps give everyone the same replay and one opaque score. TempoDance exposes the loop: observation → diagnosis → intervention → evaluation → policy update. The learner can see pose score, per-bone alignment, selected focus, session memory, policy version, current speed, and clean-loop streak. In the localhost setup, frames go only to the local FastAPI process and are not persisted by application code. A scripted no-camera mode demonstrates the flow without a model download or cloud API.
+Most movement apps give everyone the same replay and one opaque score. TempoDance exposes the loop: observation → diagnosis → intervention → evaluation → policy update. The learner can see the source video, synchronized coach overlay, detected beat count, selected body focus, pose score, per-bone alignment, session memory, policy version, speed, and clean-loop streak. In the localhost setup, camera frames go only to the local FastAPI process and are not persisted by application code. A deterministic no-camera mode demonstrates the full flow without a model download or cloud API.
 
 ## One-line pitch
 
@@ -18,15 +18,15 @@ TempoDance AI is the dance coach that learns how you learn.
 
 **0:25–0:50 — Product**
 
-"TempoDance watches body geometry, not body size. It compares normalized limb directions with the built-in reference, finds the limb that costs the most score, and selects a focused coaching rule for that error."
+"TempoDance watches body geometry, not body size. It extracts a 30 FPS coach pose from the supplied tutorial, stays synchronized to its audio beat, finds the limb that costs the most score, and selects one focused coaching rule for that error."
 
 **0:50–1:45 — Live demo**
 
-1. Leave **Demo mode** selected and press the circular play button.
-2. Point out the reference and learner skeletons plus the per-bone error colors.
-3. Let one loop finish; show the agent memory naming the repeated weak motion.
-4. Show policy version increment and the cue changing for the next loop.
-5. Let mastery stabilize; show the reasoned speed increase from `0.5x` to `0.6x`.
+1. Leave **Demo mode** selected, choose `1.0x`, and press the circular play button.
+2. Point out that the purple coach pose is overlaid directly on the supplied source video and follows its audio clock.
+3. Move from **Upper** to **Lower**, showing that only the selected body region is rendered and scored.
+4. Select **Together** and show the learner comparison plus the one active correction.
+5. Let a loop finish; show agent memory naming the repeated weak motion and the policy evaluating its cue.
 
 **1:45–2:25 — Self-evolution**
 
@@ -38,7 +38,7 @@ TempoDance AI is the dance coach that learns how you learn.
 
 **2:45–3:00 — Close**
 
-"Today it learns how to teach one eight-count. Next it becomes a reusable motor-learning layer for more dance styles and sport practice. TempoDance is the coach that learns how you learn."
+"Today it turns one tutorial into a source-synchronized, step-by-step coach. Next it becomes a reusable motor-learning layer for more dance styles and sport practice. TempoDance is the coach that learns how you learn."
 
 ## Daytona / Braintrust angle
 
@@ -68,7 +68,7 @@ Do not claim a sponsor integration in the final submission unless its credential
 ## Final submission checklist
 
 - [ ] Run the full judge demo twice from a fresh server.
-- [ ] Record a 45–60 second backup video.
+- [x] Record a concise 29-second backup video with male narration.
 - [ ] Capture one workspace screenshot and one agent-memory close-up.
 - [ ] Add the repository URL and live/local demo instructions.
 - [ ] Name only sponsor APIs that were actually exercised.
@@ -90,4 +90,4 @@ Low-confidence bones are marked invalid, so score and coverage fall. Loops below
 The UI exposes the weak motion, current score, selected focus and rule, recent policy event, speed tier, and clean-loop streak.
 
 **What would you build next?**
-Extract synchronized reference landmarks from uploaded/tutorial video, add beat alignment, then run controlled evaluation of cue policies across learners.
+Generalize the existing tutorial extraction and beat-alignment pipeline to arbitrary uploads, then run controlled evaluation of cue policies across learners.
