@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#09090d" />
+    <meta
+      name="description"
+      content="TempoDance AI — a self-evolving dance coach that learns how you move."
+    />
+    <title>TempoDance AI</title>
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="ambient ambient-one" aria-hidden="true"></div>
+    <div class="ambient ambient-two" aria-hidden="true"></div>
+
+    <div id="app" class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="#" aria-label="TempoDance AI home">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 36 36" role="img">
+              <path d="M7 21.7c4.2-1.2 6.6-4.7 7.2-10.4 2.7 5.8 6.3 9.2 10.9 10.2-4 1.1-6.6 4.4-7.8 9.8-2-5.4-5.5-8.6-10.3-9.6Z" />
+              <circle cx="26.4" cy="9.2" r="3.2" />
+            </svg>
+          </span>
+          <span class="brand-name">TempoDance <i>AI</i></span>
+        </a>
+
+        <div class="topbar-center" aria-label="Session status">
+          <span id="connectionDot" class="connection-dot"></span>
+          <span id="connectionLabel">Demo engine ready</span>
+          <span class="topbar-separator"></span>
+          <span id="sessionClock">00:00</span>
+        </div>
+
+        <div class="topbar-actions">
+          <button id="privacyButton" class="icon-button" type="button" aria-label="Open privacy details" title="Privacy details">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 5 6v5c0 4.7 2.8 8 7 10 4.2-2 7-5.3 7-10V6l-7-3Z"/><path d="m9.5 12 1.6 1.6 3.7-4"/></svg>
+          </button>
+          <button id="endSessionButton" class="ghost-button compact" type="button">End session</button>
+        </div>
+      </header>
+
+      <main class="main-content">
+        <section class="hero-row" aria-labelledby="pageTitle">
+          <div>
+            <p class="eyebrow">Adaptive movement intelligence</p>
+            <h1 id="pageTitle">Learn the move.<br /><span>Make it yours.</span></h1>
+          </div>
+          <div class="hero-copy">
+            <p>Your private coach sees the gap, explains one fix, and updates its teaching policy after every loop.</p>
+            <div class="hero-pills" aria-label="Product properties">
+              <span><i class="mini-dot"></i> In-memory pose</span>
+              <span>No video stored</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="routine-card glass-card" aria-label="Choose a dance routine">
+          <div class="routine-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M10 8.5v7l6-3.5-6-3.5Z"/><rect x="3" y="4" width="18" height="16" rx="4"/></svg>
+          </div>
+          <label class="routine-field" for="routineUrl">
+            <span>Tutorial source (optional)</span>
+            <input
+              id="routineUrl"
+              type="url"
+              inputmode="url"
+              autocomplete="url"
+              value="https://www.youtube.com/watch?v=tempo-demo"
+              placeholder="Paste a YouTube or video URL"
+            />
+          </label>
+          <div class="routine-meta" aria-label="Routine metadata">
+            <span id="routineName">8-count house groove</span>
+            <span><b id="routineBpm">112</b> BPM</span>
+            <span><b>8</b> counts</span>
+          </div>
+          <button id="analyzeButton" class="primary-button" type="button">
+            <span class="button-label">Prepare session</span>
+            <span class="button-spinner" aria-hidden="true"></span>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+        </section>
+
+        <div id="statusBanner" class="status-banner" role="status" aria-live="polite" hidden>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8v4m0 4h.01"/><circle cx="12" cy="12" r="9"/></svg>
+          <span id="statusBannerText"></span>
+          <button id="dismissBanner" type="button" aria-label="Dismiss message">×</button>
+        </div>
+
+        <section class="workspace" aria-label="Dance practice workspace">
+          <div class="practice-column">
+            <div class="practice-toolbar">
+              <div class="segmented-control" role="group" aria-label="Practice input">
+                <button id="demoModeButton" class="segment active" type="button" aria-pressed="true">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 7h8m-9 4h10M9 15h6"/><rect x="4" y="3" width="16" height="18" rx="5"/></svg>
+                  Demo mode
+                </button>
+                <button id="cameraModeButton" class="segment" type="button" aria-pressed="false">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 10 4-2v8l-4-2"/><rect x="3" y="6" width="12" height="12" rx="3"/></svg>
+                  My camera
+                </button>
+              </div>
+              <div class="speed-control" aria-label="Playback speed">
+                <span>Coach speed</span>
+                <div id="speedTiers" class="speed-tiers">
+                  <button class="speed-tier active" data-speed="0.5" type="button">0.5×</button>
+                  <button class="speed-tier" data-speed="0.6" type="button">0.6×</button>
+                  <button class="speed-tier" data-speed="0.8" type="button">0.8×</button>
+                  <button class="speed-tier" data-speed="1" type="button">1.0×</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="stage-grid">
+              <article class="stage-panel reference-stage">
+                <div class="stage-header">
+                  <div>
+                    <span class="stage-kicker">Reference</span>
+                    <h2>Coach motion</h2>
+                  </div>
+                  <span class="stage-badge">COCO-17</span>
+                </div>
+                <div class="canvas-wrap">
+                  <canvas id="referenceCanvas" aria-label="Animated reference pose skeleton"></canvas>
+                  <div id="referenceLoading" class="stage-loading" hidden>
+                    <span class="orb-loader"></span>
+                    <strong>Preparing practice loop</strong>
+                    <small>Loading the built-in reference skeleton</small>
+                  </div>
+                  <div class="count-watermark" aria-hidden="true"><span id="watermarkCount">1</span><small>/ 8</small></div>
+                  <div class="ground-line" aria-hidden="true"></div>
+                </div>
+                <div class="stage-footer">
+                  <span><i class="legend-line reference"></i> Target path</span>
+                  <span id="focusLabel">Focus · full body</span>
+                </div>
+              </article>
+
+              <article class="stage-panel live-stage">
+                <div class="stage-header">
+                  <div>
+                    <span class="stage-kicker live">Live</span>
+                    <h2 id="livePanelTitle">Deterministic dancer</h2>
+                  </div>
+                  <span id="liveBadge" class="stage-badge success"><i></i> Ready</span>
+                </div>
+                <div class="canvas-wrap">
+                  <video id="cameraVideo" playsinline muted hidden></video>
+                  <canvas id="liveCanvas" aria-label="Live learner pose with joint feedback"></canvas>
+                  <canvas id="captureCanvas" hidden></canvas>
+                  <div id="cameraEmpty" class="camera-empty" hidden>
+                    <div class="camera-empty-icon">
+                      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 10 4-2v8l-4-2"/><rect x="3" y="6" width="12" height="12" rx="3"/></svg>
+                    </div>
+                    <strong>Camera stays off until you choose</strong>
+                    <p>Frames are processed for pose landmarks and are never saved by this interface.</p>
+                    <button id="enableCameraButton" class="primary-button small" type="button">Enable camera</button>
+                  </div>
+                  <div id="cameraError" class="camera-empty error" hidden>
+                    <div class="camera-empty-icon">
+                      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8v4m0 4h.01"/><circle cx="12" cy="12" r="9"/></svg>
+                    </div>
+                    <strong>Camera unavailable</strong>
+                    <p id="cameraErrorText">Check browser permission, or continue with the pitch-safe demo.</p>
+                    <button id="useDemoFallbackButton" class="ghost-button" type="button">Use demo instead</button>
+                  </div>
+                  <div class="score-orbit" aria-label="Current pose score">
+                    <svg viewBox="0 0 52 52" aria-hidden="true">
+                      <circle class="score-track" cx="26" cy="26" r="22"></circle>
+                      <circle id="scoreRing" class="score-ring" cx="26" cy="26" r="22"></circle>
+                    </svg>
+                    <span id="stageScore">--</span>
+                  </div>
+                  <div class="ground-line" aria-hidden="true"></div>
+                </div>
+                <div class="stage-footer">
+                  <span><i class="legend-dot good"></i> Aligned</span>
+                  <span><i class="legend-dot fix"></i> Needs attention</span>
+                  <span id="latencyLabel">Local simulation · 0 ms</span>
+                </div>
+              </article>
+            </div>
+
+            <div class="transport-card glass-card">
+              <button id="playButton" class="play-button" type="button" aria-label="Start practice">
+                <svg class="play-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 8 6-8 6V6Z"/></svg>
+                <svg class="pause-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 7v10m6-10v10"/></svg>
+              </button>
+              <div class="transport-main">
+                <div class="transport-labels">
+                  <strong id="transportTitle">Ready for your first loop</strong>
+                  <span id="transportHint">Press play — the coach will adapt after each pass.</span>
+                </div>
+                <div class="timeline" aria-label="Eight-count progress">
+                  <div id="timelineFill" class="timeline-fill"></div>
+                  <div id="countMarkers" class="count-markers"></div>
+                </div>
+              </div>
+              <div class="loop-stat">
+                <span>Clean loops</span>
+                <strong><b id="cleanLoops">0</b> / 2</strong>
+              </div>
+            </div>
+
+            <div class="metric-strip">
+              <article class="metric-card">
+                <div class="metric-icon accuracy"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 14h3l2-7 4 12 2-7h5"/></svg></div>
+                <div><span>Pose accuracy</span><strong id="accuracyMetric">--</strong></div>
+                <small id="accuracyDelta">Waiting for motion</small>
+              </article>
+              <article class="metric-card">
+                <div class="metric-icon tempo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v7l4 2"/><circle cx="12" cy="12" r="9"/></svg></div>
+                <div><span>Timing preview</span><strong id="timingMetric">--</strong></div>
+                <small id="timingDelta">Demo timing is scripted</small>
+              </article>
+              <article class="metric-card">
+                <div class="metric-icon focus"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3v4H4m12-4v4h4M8 21v-4H4m12 4v-4h4"/></svg></div>
+                <div><span>Attention joint</span><strong id="attentionMetric">None yet</strong></div>
+                <small id="attentionDelta">Full-body scan</small>
+              </article>
+            </div>
+          </div>
+
+          <aside class="agent-panel" aria-labelledby="agentTitle">
+            <div class="agent-heading">
+              <div class="agent-avatar" aria-hidden="true">
+                <svg viewBox="0 0 30 30"><path d="M8 15c4-1.1 6.2-4 6.7-8.5 2.2 4.7 5.2 7.5 9 8.3-3.4.9-5.5 3.6-6.4 8.1-1.8-4.5-4.8-7.1-9.3-7.9Z"/></svg>
+                <i></i>
+              </div>
+              <div>
+                <p class="eyebrow">Self-evolving coach</p>
+                <h2 id="agentTitle">Tempo agent</h2>
+              </div>
+              <span id="policyVersion" class="version-chip">Policy v1.0</span>
+            </div>
+
+            <div class="agent-state">
+              <div class="agent-state-label">
+                <span>Agent loop</span>
+                <strong id="agentStateText">Observing</strong>
+              </div>
+              <div class="agent-steps" aria-label="Agent processing cycle">
+                <span id="stepObserve" class="active"><i>1</i>Observe</span>
+                <b></b>
+                <span id="stepDiagnose"><i>2</i>Diagnose</span>
+                <b></b>
+                <span id="stepAdapt"><i>3</i>Adapt</span>
+              </div>
+            </div>
+
+            <section class="coach-message" aria-live="polite">
+              <div class="message-topline">
+                <span><i class="pulse-dot"></i> Next best action</span>
+                <small id="messageConfidence">calibrating</small>
+              </div>
+              <p id="coachMessage">Start a loop and I’ll find the smallest correction with the biggest impact.</p>
+              <div id="coachCue" class="coach-cue" hidden>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>
+                <span>Keep everything else unchanged</span>
+              </div>
+            </section>
+
+            <section class="agent-section memory-section">
+              <div class="section-title">
+                <div>
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6a3 3 0 1 1 5.8 1M7 8a3 3 0 0 0 0 6m2 0a3 3 0 1 0 5.8 1M8 18a3 3 0 0 0 5.8-1M15 6a3 3 0 0 1 2 5.2M16 13a3 3 0 0 1-1 5.8"/></svg>
+                  <h3>Session memory</h3>
+                </div>
+                <span id="memoryCount">0 signals</span>
+              </div>
+              <div id="memoryEmpty" class="memory-empty">
+                <span class="memory-line"></span>
+                <p>Movement patterns will appear here after the first count.</p>
+              </div>
+              <div id="memoryList" class="memory-list" hidden></div>
+            </section>
+
+            <section class="agent-section policy-section">
+              <div class="section-title">
+                <div>
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h8m4 0h2M5 12h2m4 0h8M5 17h6m4 0h4"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="13" cy="17" r="2"/></svg>
+                  <h3>Policy adaptation</h3>
+                </div>
+                <span id="policyStatus" class="learning-chip">Learning</span>
+              </div>
+              <div class="policy-chart">
+                <svg id="policyChart" viewBox="0 0 280 64" preserveAspectRatio="none" aria-label="Recent accuracy trend">
+                  <defs>
+                    <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stop-color="#b7ff5a" stop-opacity=".25" />
+                      <stop offset="100%" stop-color="#b7ff5a" stop-opacity="0" />
+                    </linearGradient>
+                  </defs>
+                  <path id="chartArea" class="chart-area" d=""></path>
+                  <path id="chartLine" class="chart-line" d=""></path>
+                </svg>
+                <div class="chart-labels"><span>First pass</span><span>Now</span></div>
+              </div>
+              <div class="policy-change">
+                <span>Current rule</span>
+                <p id="policyRule"><b>Baseline:</b> scan full body equally.</p>
+              </div>
+            </section>
+
+            <div class="safety-note">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 5 6v5c0 4.7 2.8 8 7 10 4.2-2 7-5.3 7-10V6l-7-3Z"/><path d="m9.5 12 1.6 1.6 3.7-4"/></svg>
+              <div><strong>Safe adaptation</strong><span>Policy changes affect coaching only — never the mastery threshold or your raw video.</span></div>
+            </div>
+          </aside>
+        </section>
+      </main>
+
+      <footer class="footer">
+        <span>TempoDance AI · Private by design</span>
+        <div><span>Pose frames ephemeral</span><i></i><span>No disk persistence</span><i></i><span>Human-controlled speed</span></div>
+      </footer>
+    </div>
+
+    <dialog id="privacyDialog" class="privacy-dialog">
+      <form method="dialog">
+        <div class="dialog-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 5 6v5c0 4.7 2.8 8 7 10 4.2-2 7-5.3 7-10V6l-7-3Z"/><path d="m9.5 12 1.6 1.6 3.7-4"/></svg></div>
+        <button class="dialog-close" value="close" aria-label="Close privacy dialog">×</button>
+        <p class="eyebrow">Privacy boundary</p>
+        <h2>Your motion. Your control.</h2>
+        <div class="privacy-grid">
+          <div><strong>Ephemeral frames</strong><span>Camera frames are used to calculate pose landmarks, then discarded.</span></div>
+          <div><strong>Explicit camera start</strong><span>Nothing captures until you press “Enable camera.”</span></div>
+          <div><strong>Process-only memory</strong><span>Learned coaching signals stay in server memory and are not written to disk.</span></div>
+          <div><strong>Bounded adaptation</strong><span>The agent can change feedback priority, not safety or mastery rules.</span></div>
+        </div>
+        <button class="primary-button full" value="close">Got it</button>
+      </form>
+    </dialog>
+
+    <div id="toastRegion" class="toast-region" aria-live="polite" aria-atomic="true"></div>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
