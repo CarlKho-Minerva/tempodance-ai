@@ -11,7 +11,7 @@ const SOURCE_VIDEO_ID = "jrUsvBKemBU";
 const SOURCE_POSE_PATH = `./assets/tutorial-${SOURCE_VIDEO_ID}-pose.json`;
 const SOURCE_DURATION_SECONDS = 20.47;
 const SOURCE_ASPECT_RATIO = 9 / 16;
-const GUIDED_MATCH_THRESHOLD = 0.82;
+const GUIDED_MATCH_THRESHOLD = 0.65;
 const GUIDED_HOLD_MS = 450;
 
 const FOCUS_STEPS = [
