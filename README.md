@@ -51,4 +51,7 @@ In the documented localhost setup, webcam JPEGs go to the local FastAPI process 
 
 ![TempoDance AI judge demo showing policy memory and automatic 0.6x progression](artifacts/judge-demo-final.png)
 
+- [24-second narrated backup demo](artifacts/tempodance-demo-voiced.mp4)
+- [Silent screen-recording source](artifacts/tempodance-demo-raw.mp4)
+
 See [SUBMISSION.md](SUBMISSION.md) for copy, the three-minute pitch, demo recovery, and the two hackathon angles.
