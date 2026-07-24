@@ -187,6 +187,7 @@ const elements = {
   nextFocusButton: $("#nextFocusButton"),
   practicePlanHint: $("#practicePlanHint"),
   stepPlanButton: $("#stepPlanButton"),
+  gatedPlanButton: $("#gatedPlanButton"),
   fullPlanButton: $("#fullPlanButton"),
   matchGate: $("#matchGate"),
   matchGateTitle: $("#matchGateTitle"),
@@ -196,6 +197,10 @@ const elements = {
   sourceOverlayLabel: $("#sourceOverlayLabel"),
   sourceBadge: $("#sourceBadge"),
   focusLabel: $("#focusLabel"),
+  workspace: $("#workspace"),
+  agentPanel: $("#agentPanel"),
+  closeAgentButton: $("#closeAgentButton"),
+  showAgentButton: $("#showAgentButton"),
   chartLine: $("#chartLine"),
   chartArea: $("#chartArea"),
   privacyDialog: $("#privacyDialog"),
@@ -264,20 +269,30 @@ function updateFocusUI() {
   const index = Math.max(0, FOCUS_STEPS.findIndex((step) => step.id === state.focus));
   const step = FOCUS_STEPS[index];
   const stepByStep = state.practicePlan === "steps";
-  elements.learningStepNumber.textContent = stepByStep ? `Step ${index + 1} of ${FOCUS_STEPS.length}` : "Full routine";
-  elements.learningStepTitle.textContent = stepByStep ? step.title : "Everything together";
-  elements.learningStepHint.textContent = stepByStep ? `Video freezes on each count until you match it. ${step.hint}` : "Follow the complete coach motion with the video, audio, and beat counts synchronized.";
+  const gated = state.practicePlan === "gated";
+  const staged = stepByStep || gated;
+  elements.learningStepNumber.textContent = staged ? `Step ${index + 1} of ${FOCUS_STEPS.length}` : "Focus filter";
+  elements.learningStepTitle.textContent = step.title;
+  elements.learningStepHint.textContent = gated
+    ? `Video freezes on each count until you reach ${Math.round(GUIDED_MATCH_THRESHOLD * 100)}%. ${step.hint}`
+    : state.practicePlan === "full"
+      ? `Continuous playback with ${step.id === "full" ? "the complete pose" : `${step.id}-body isolation`}. ${step.hint}`
+      : step.hint;
   elements.sourceOverlayLabel.textContent = step.overlay;
   elements.focusLabel.textContent = `Focus · ${step.id === "full" ? "full body" : `${step.id} body only`}`;
-  elements.practicePlanHint.textContent = stepByStep
-    ? "Match each frozen count to unlock the next move"
-    : "Practice the complete movement from the start";
+  elements.practicePlanHint.textContent = gated
+    ? `Freeze each count until pose accuracy reaches ${Math.round(GUIDED_MATCH_THRESHOLD * 100)}%`
+    : stepByStep
+      ? "Practice upper, lower, then combine at your own pace"
+      : "Continuous playback with selectable body isolation";
   elements.stepPlanButton.classList.toggle("active", stepByStep);
   elements.stepPlanButton.setAttribute("aria-pressed", String(stepByStep));
-  elements.fullPlanButton.classList.toggle("active", !stepByStep);
-  elements.fullPlanButton.setAttribute("aria-pressed", String(!stepByStep));
-  $("#focusSteps").hidden = !stepByStep;
-  elements.nextFocusButton.hidden = !stepByStep;
+  elements.gatedPlanButton.classList.toggle("active", gated);
+  elements.gatedPlanButton.setAttribute("aria-pressed", String(gated));
+  elements.fullPlanButton.classList.toggle("active", state.practicePlan === "full");
+  elements.fullPlanButton.setAttribute("aria-pressed", String(state.practicePlan === "full"));
+  $("#focusSteps").hidden = false;
+  elements.nextFocusButton.hidden = state.practicePlan === "full";
   elements.nextFocusButton.textContent = index === FOCUS_STEPS.length - 1
     ? "Restart: upper body"
     : `Next: ${FOCUS_STEPS[index + 1].id} body`;
@@ -290,15 +305,17 @@ function updateFocusUI() {
 }
 
 function setPracticePlan(plan, { announce = true } = {}) {
-  if (!["steps", "full"].includes(plan)) return;
+  if (!["steps", "gated", "full"].includes(plan)) return;
   const changed = state.practicePlan !== plan;
   if (!changed) return;
   state.practicePlan = plan;
-  setFocus(plan === "steps" ? "upper" : "full", { announce: false });
+  setFocus(plan === "full" ? "full" : "upper", { announce: false });
   if (announce && changed) {
-    toast(plan === "steps"
-      ? "Step-by-step plan · match each count to unlock the next"
-      : "Full routine plan · complete movement enabled");
+    toast(plan === "gated"
+      ? `Progression gating · hold ${Math.round(GUIDED_MATCH_THRESHOLD * 100)}% to unlock each count`
+      : plan === "steps"
+        ? "Step by step · switch body focus at your own pace"
+        : "Full routine · continuous playback with body isolation controls");
   }
 }
 
@@ -311,7 +328,7 @@ function clearGuidedGate({ resetIndex = false } = {}) {
 }
 
 function beginGuidedGate(gateIndex) {
-  if (!state.sourceMotionReady || state.practicePlan !== "steps" || state.guidedWaiting || gateIndex === state.guidedGateIndex) return;
+  if (!state.sourceMotionReady || state.practicePlan !== "gated" || state.guidedWaiting || gateIndex === state.guidedGateIndex) return;
   state.guidedWaiting = true;
   state.guidedGateIndex = gateIndex;
   state.guidedHoldMs = 0;
@@ -322,6 +339,13 @@ function beginGuidedGate(gateIndex) {
   elements.matchGateFill.style.width = "0%";
   elements.transportTitle.textContent = `Your turn · count ${state.currentCount}`;
   elements.transportHint.textContent = "The coach and audio are frozen. Match the visible pose to unlock the next count.";
+}
+
+function setCoachVisible(visible) {
+  elements.agentPanel.hidden = !visible;
+  elements.showAgentButton.hidden = visible;
+  elements.workspace.classList.toggle("coach-collapsed", !visible);
+  if (!visible) toast("Tempo coach hidden · dance view expanded");
 }
 
 function updateGuidedGate(delta) {
@@ -1542,7 +1566,10 @@ function initialize() {
   elements.useDemoFallbackButton.addEventListener("click", () => setMode("demo"));
   elements.audioToggle.addEventListener("click", () => setAudioEnabled(!state.audioEnabled));
   elements.stepPlanButton.addEventListener("click", () => setPracticePlan("steps"));
+  elements.gatedPlanButton.addEventListener("click", () => setPracticePlan("gated"));
   elements.fullPlanButton.addEventListener("click", () => setPracticePlan("full"));
+  elements.closeAgentButton.addEventListener("click", () => setCoachVisible(false));
+  elements.showAgentButton.addEventListener("click", () => setCoachVisible(true));
   $$(".focus-step").forEach((button) => {
     button.addEventListener("click", () => setFocus(button.dataset.focus));
   });

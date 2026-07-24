@@ -508,10 +508,15 @@ h1 span {
 }
 
 .workspace {
+  position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr) 340px;
   align-items: start;
   gap: 18px;
+}
+
+.workspace.coach-collapsed {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .practice-column {
@@ -1518,6 +1523,68 @@ h1 span {
   border-bottom: 1px solid var(--line);
 }
 
+.agent-heading-actions {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.agent-dismiss-button,
+.show-agent-button {
+  cursor: pointer;
+  border: 1px solid var(--line);
+  color: var(--muted);
+}
+
+.agent-dismiss-button {
+  display: grid;
+  width: 29px;
+  height: 29px;
+  place-items: center;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.agent-dismiss-button:hover {
+  border-color: rgba(183, 255, 90, 0.28);
+  color: var(--lime);
+}
+
+.agent-dismiss-button svg,
+.show-agent-button svg {
+  width: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+.show-agent-button {
+  position: fixed;
+  z-index: 20;
+  top: 86px;
+  right: 16px;
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  gap: 7px;
+  padding: 0 11px;
+  border-color: rgba(183, 255, 90, 0.24);
+  border-radius: 999px;
+  background: rgba(15, 16, 14, 0.92);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  color: var(--lime);
+  font-size: 8px;
+  font-weight: 760;
+  backdrop-filter: blur(12px);
+}
+
+.show-agent-button[hidden],
+.agent-panel[hidden] {
+  display: none;
+}
+
 .agent-avatar {
   position: relative;
   display: grid;
@@ -2196,6 +2263,20 @@ h1 span {
 
   .learning-step-copy {
     grid-column: 1 / -1;
+  }
+
+  .practice-plan {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .plan-options {
+    width: 100%;
+  }
+
+  .plan-option {
+    flex: 1;
+    justify-content: center;
   }
 
   .focus-steps {

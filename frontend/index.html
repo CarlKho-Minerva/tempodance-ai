@@ -91,7 +91,7 @@
           <button id="dismissBanner" type="button" aria-label="Dismiss message">×</button>
         </div>
 
-        <section class="workspace" aria-label="Dance practice workspace">
+        <section id="workspace" class="workspace" aria-label="Dance practice workspace">
           <div class="practice-column">
             <div class="practice-toolbar">
               <div class="segmented-control" role="group" aria-label="Practice input">
@@ -130,6 +130,10 @@
                   <button id="stepPlanButton" class="plan-option active" type="button" aria-pressed="true">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6h14M5 12h9M5 18h5"/><circle cx="18" cy="12" r="2"/><circle cx="14" cy="18" r="2"/></svg>
                     Step by step
+                  </button>
+                  <button id="gatedPlanButton" class="plan-option" type="button" aria-pressed="false">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 11V8a5 5 0 0 1 10 0v3"/><rect x="5" y="11" width="14" height="10" rx="3"/><path d="m10 16 1.5 1.5L15 14"/></svg>
+                    Progression gating
                   </button>
                   <button id="fullPlanButton" class="plan-option" type="button" aria-pressed="false">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 7 8 5-8 5V7Z"/><circle cx="12" cy="12" r="9"/></svg>
@@ -274,7 +278,7 @@
             </div>
           </div>
 
-          <aside class="agent-panel" aria-labelledby="agentTitle">
+          <aside id="agentPanel" class="agent-panel" aria-labelledby="agentTitle">
             <div class="agent-heading">
               <div class="agent-avatar" aria-hidden="true">
                 <svg viewBox="0 0 30 30"><path d="M8 15c4-1.1 6.2-4 6.7-8.5 2.2 4.7 5.2 7.5 9 8.3-3.4.9-5.5 3.6-6.4 8.1-1.8-4.5-4.8-7.1-9.3-7.9Z"/></svg>
@@ -284,7 +288,12 @@
                 <p class="eyebrow">Self-evolving coach</p>
                 <h2 id="agentTitle">Tempo agent</h2>
               </div>
-              <span id="policyVersion" class="version-chip">Policy v1.0</span>
+              <div class="agent-heading-actions">
+                <span id="policyVersion" class="version-chip">Policy v1.0</span>
+                <button id="closeAgentButton" class="agent-dismiss-button" type="button" aria-label="Hide Tempo coach">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 8 8 8m0-8-8 8"/></svg>
+                </button>
+              </div>
             </div>
 
             <div class="agent-state">
@@ -360,6 +369,10 @@
               <div><strong>Safe adaptation</strong><span>Policy changes affect coaching only — never the mastery threshold or your raw video.</span></div>
             </div>
           </aside>
+          <button id="showAgentButton" class="show-agent-button" type="button" hidden>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 12h8m-4-4 4 4-4 4"/><path d="M5 5h14v14H5z"/></svg>
+            Show Tempo coach
+          </button>
         </section>
       </main>
 
