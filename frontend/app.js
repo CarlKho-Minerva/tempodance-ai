@@ -11,6 +11,8 @@ const SOURCE_VIDEO_ID = "jrUsvBKemBU";
 const SOURCE_POSE_PATH = `./assets/tutorial-${SOURCE_VIDEO_ID}-pose.json`;
 const SOURCE_DURATION_SECONDS = 20.47;
 const SOURCE_ASPECT_RATIO = 9 / 16;
+const GUIDED_MATCH_THRESHOLD = 0.82;
+const GUIDED_HOLD_MS = 450;
 
 const FOCUS_STEPS = [
   { id: "upper", title: "Upper body only", hint: "Follow the arms and shoulders. Legs are intentionally hidden.", overlay: "Upper body overlay" },
@@ -124,6 +126,9 @@ const state = {
   countPhase: 0,
   currentBeatIndex: -1,
   previousSourceTime: 0,
+  guidedWaiting: false,
+  guidedGateIndex: -1,
+  guidedHoldMs: 0,
 };
 
 const elements = {
@@ -183,6 +188,10 @@ const elements = {
   practicePlanHint: $("#practicePlanHint"),
   stepPlanButton: $("#stepPlanButton"),
   fullPlanButton: $("#fullPlanButton"),
+  matchGate: $("#matchGate"),
+  matchGateTitle: $("#matchGateTitle"),
+  matchGateScore: $("#matchGateScore"),
+  matchGateFill: $("#matchGateFill"),
   audioToggle: $("#audioToggle"),
   sourceOverlayLabel: $("#sourceOverlayLabel"),
   sourceBadge: $("#sourceBadge"),
@@ -257,11 +266,11 @@ function updateFocusUI() {
   const stepByStep = state.practicePlan === "steps";
   elements.learningStepNumber.textContent = stepByStep ? `Step ${index + 1} of ${FOCUS_STEPS.length}` : "Full routine";
   elements.learningStepTitle.textContent = stepByStep ? step.title : "Everything together";
-  elements.learningStepHint.textContent = stepByStep ? step.hint : "Follow the complete coach motion with the video, audio, and beat counts synchronized.";
+  elements.learningStepHint.textContent = stepByStep ? `Video freezes on each count until you match it. ${step.hint}` : "Follow the complete coach motion with the video, audio, and beat counts synchronized.";
   elements.sourceOverlayLabel.textContent = step.overlay;
   elements.focusLabel.textContent = `Focus · ${step.id === "full" ? "full body" : `${step.id} body only`}`;
   elements.practicePlanHint.textContent = stepByStep
-    ? "Learn upper body, then lower body, then combine"
+    ? "Match each frozen count to unlock the next move"
     : "Practice the complete movement from the start";
   elements.stepPlanButton.classList.toggle("active", stepByStep);
   elements.stepPlanButton.setAttribute("aria-pressed", String(stepByStep));
@@ -288,9 +297,59 @@ function setPracticePlan(plan, { announce = true } = {}) {
   setFocus(plan === "steps" ? "upper" : "full", { announce: false });
   if (announce && changed) {
     toast(plan === "steps"
-      ? "Step-by-step plan · start with upper body only"
+      ? "Step-by-step plan · match each count to unlock the next"
       : "Full routine plan · complete movement enabled");
   }
+}
+
+function clearGuidedGate({ resetIndex = false } = {}) {
+  state.guidedWaiting = false;
+  state.guidedHoldMs = 0;
+  if (resetIndex) state.guidedGateIndex = -1;
+  elements.matchGate.hidden = true;
+  elements.matchGateFill.style.width = "0%";
+}
+
+function beginGuidedGate(gateIndex) {
+  if (!state.sourceMotionReady || state.practicePlan !== "steps" || state.guidedWaiting || gateIndex === state.guidedGateIndex) return;
+  state.guidedWaiting = true;
+  state.guidedGateIndex = gateIndex;
+  state.guidedHoldMs = 0;
+  elements.referenceVideo.pause();
+  elements.matchGate.hidden = false;
+  elements.matchGateTitle.textContent = `Match count ${state.currentCount}`;
+  elements.matchGateScore.textContent = `Reach ${Math.round(GUIDED_MATCH_THRESHOLD * 100)}% to continue`;
+  elements.matchGateFill.style.width = "0%";
+  elements.transportTitle.textContent = `Your turn · count ${state.currentCount}`;
+  elements.transportHint.textContent = "The coach and audio are frozen. Match the visible pose to unlock the next count.";
+}
+
+function updateGuidedGate(delta) {
+  if (!state.guidedWaiting) return;
+  const score = Number.isFinite(state.score) ? state.score : 0;
+  if (score >= GUIDED_MATCH_THRESHOLD) {
+    state.guidedHoldMs += delta;
+    const held = clamp(state.guidedHoldMs / GUIDED_HOLD_MS);
+    elements.matchGateFill.style.width = `${Math.round(held * 100)}%`;
+    elements.matchGateScore.textContent = `${Math.round(score * 100)}% · hold steady`;
+    if (held < 1) return;
+
+    const unlockedCount = state.currentCount;
+    clearGuidedGate();
+    elements.transportTitle.textContent = `Matched · count ${unlockedCount}`;
+    elements.transportHint.textContent = "Nice. The next move is playing now.";
+    elements.referenceVideo.play().catch(() => {
+      pausePractice();
+      showBanner("Press play to continue the guided routine with audio.");
+    });
+    return;
+  }
+
+  state.guidedHoldMs = 0;
+  elements.matchGateFill.style.width = `${Math.round(clamp(score / GUIDED_MATCH_THRESHOLD) * 72)}%`;
+  elements.matchGateScore.textContent = Number.isFinite(state.score)
+    ? `${Math.round(score * 100)}% / ${Math.round(GUIDED_MATCH_THRESHOLD * 100)}% · adjust the highlighted joints`
+    : "Step into frame to match this pose";
 }
 
 function setFocus(focus, { announce = true } = {}) {
@@ -1260,6 +1319,7 @@ async function startPractice() {
 function pausePractice() {
   state.playing = false;
   elements.referenceVideo.pause();
+  clearGuidedGate({ resetIndex: true });
   elements.playButton.classList.remove("playing");
   elements.playButton.setAttribute("aria-label", "Start practice");
   if (Number.isFinite(state.score)) {
@@ -1280,6 +1340,9 @@ function resetSession({ keepMode = true } = {}) {
     countPhase: 0,
     currentCount: 1,
     currentBeatIndex: -1,
+    guidedWaiting: false,
+    guidedGateIndex: -1,
+    guidedHoldMs: 0,
     completedLoops: 0,
     cleanLoops: 0,
     loopMinimum: 1,
@@ -1359,7 +1422,10 @@ function tick(now) {
     if (elements.referenceVideo.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA && sourceDuration > 0) {
       const sourceTime = elements.referenceVideo.currentTime;
       state.phase = clamp(sourceTime / sourceDuration);
-      if (sourceTime + .25 < state.previousSourceTime) state.currentBeatIndex = -1;
+      if (sourceTime + .25 < state.previousSourceTime) {
+        state.currentBeatIndex = -1;
+        state.guidedGateIndex = -1;
+      }
       if (state.sourceBeats.length) {
         const beatIndex = state.sourceBeats.findLastIndex((beat) => beat <= sourceTime + .015);
         if (beatIndex >= 0) {
@@ -1371,13 +1437,16 @@ function tick(now) {
           state.countPhase = ((beatIndex % 8) + beatProgress) / 8;
           if (previousBeatIndex >= 0 && Math.floor(beatIndex / 8) > Math.floor(previousBeatIndex / 8)) handleCompletedLoop();
           state.currentBeatIndex = beatIndex;
+          beginGuidedGate(beatIndex);
         } else {
           state.currentCount = 1;
           state.countPhase = 0;
         }
       } else {
+        const previousCount = state.currentCount;
         state.currentCount = Math.min(8, Math.floor(state.phase * 8) + 1);
         state.countPhase = state.phase;
+        if (state.currentCount !== previousCount || state.guidedGateIndex < 0) beginGuidedGate(state.currentCount - 1);
       }
       state.previousSourceTime = sourceTime;
     } else {
@@ -1388,7 +1457,9 @@ function tick(now) {
       state.countPhase = state.phase;
     }
     state.loopMinimum = Math.min(state.loopMinimum, state.score ?? 1);
-    elements.transportTitle.textContent = `Loop ${state.completedLoops + 1} · count ${state.currentCount}`;
+    elements.transportTitle.textContent = state.guidedWaiting
+      ? `Your turn · count ${state.currentCount}`
+      : `Loop ${state.completedLoops + 1} · count ${state.currentCount}`;
     elements.sessionClock.textContent = formatTime(state.elapsedPlayingMs);
   }
 
@@ -1439,6 +1510,7 @@ function tick(now) {
   updateCountUI();
   updateScoreUI();
   updateTimingUI(now);
+  updateGuidedGate(delta);
   updateAgentUI();
   updateChart(now);
 

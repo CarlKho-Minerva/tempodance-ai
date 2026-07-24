@@ -169,6 +169,12 @@
                   ></video>
                   <canvas id="referenceCanvas" aria-label="Coach pose extracted from and overlaid on the source video"></canvas>
                   <div class="source-overlay-label"><i></i><span id="sourceOverlayLabel">Upper body overlay</span></div>
+                  <div id="matchGate" class="match-gate" role="status" aria-live="polite" hidden>
+                    <span>Your turn</span>
+                    <strong id="matchGateTitle">Match count 1</strong>
+                    <small id="matchGateScore">Reach 82% to continue</small>
+                    <div class="match-gate-meter" aria-hidden="true"><i id="matchGateFill"></i></div>
+                  </div>
                   <div id="referenceLoading" class="stage-loading" hidden>
                     <span class="orb-loader"></span>
                     <strong>Preparing source overlay</strong>

@@ -1013,6 +1013,65 @@ h1 span {
   box-shadow: 0 0 7px var(--violet);
 }
 
+.match-gate {
+  position: absolute;
+  z-index: 5;
+  bottom: 24px;
+  left: 50%;
+  display: grid;
+  width: min(220px, calc(100% - 32px));
+  gap: 3px;
+  padding: 12px 14px;
+  border: 1px solid rgba(183, 255, 90, 0.42);
+  border-radius: 14px;
+  background: rgba(8, 10, 7, 0.9);
+  box-shadow: 0 14px 38px rgba(0, 0, 0, 0.42), 0 0 28px rgba(183, 255, 90, 0.08);
+  text-align: center;
+  transform: translateX(-50%);
+  backdrop-filter: blur(12px);
+  pointer-events: none;
+}
+
+.match-gate[hidden] {
+  display: none;
+}
+
+.match-gate > span {
+  color: var(--lime);
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.match-gate > strong {
+  color: #f5f5f7;
+  font-size: 15px;
+}
+
+.match-gate > small {
+  color: var(--muted);
+  font-size: 8px;
+}
+
+.match-gate-meter {
+  height: 4px;
+  margin-top: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.match-gate-meter i {
+  display: block;
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--lime);
+  box-shadow: 0 0 8px rgba(183, 255, 90, 0.6);
+  transition: width 100ms linear;
+}
+
 #cameraVideo {
   z-index: 1;
   opacity: 0.22;
