@@ -4,8 +4,6 @@
 
 **[▶ Watch the demo on YouTube](https://youtu.be/l5TPZ2Bd-HI)** · **[Launch the demo-only Vercel build](https://tempodance-ai.vercel.app)**
 
-![TempoDance AI cover featuring the source-synced coaching workspace](assets/cover.png)
-
 TempoDance AI is a self-evolving dance coach. It compares a learner's body geometry with a source-synchronized tutorial pose, identifies the lowest-scoring tracked limb, and evaluates its coaching focus after each completed server-side loop.
 
 The current hackathon build is deliberately demo-safe:
