@@ -9,10 +9,11 @@ The current hackathon build is deliberately demo-safe:
 - **Demo mode works with no API key, model download, or camera.**
 - **The documented live setup runs pose inference locally** with Ultralytics and Apple MPS when available.
 - **The coaching policy evolves from measured errors**, with visible memory and policy versions.
-- **Automatic progression requires two qualifying loops** at each tier: `0.5x`, `0.6x`, `0.8x`, and `1.0x`. Manual controls remain available.
+- **Automatic progression requires two qualifying loops** at each tier: `0.25x`, `0.5x`, `0.6x`, `0.8x`, and `1.0x`. Manual controls remain available.
 - **Cloud routine planning is optional.** A Fireworks adapter accepts caller-supplied frame images, while scoring and coaching remain deterministic.
-- **The supplied YouTube Short is packaged locally with audio.** Its lower tutorial coach was processed into a 10 FPS COCO-17 pose track, so the purple overlay and source video share one playback clock.
+- **The supplied YouTube Short is packaged locally with audio.** Its lower tutorial coach was processed into a source-rate 30 FPS COCO-17 pose track, so the purple overlay and source video share one playback clock.
 - **Practice is progressive.** Upper body, lower body, and the combined move are separate, manually controlled steps; only the selected region is rendered and scored.
+- **Live camera motion targets 20 pose updates per second** from a requested 30 FPS camera stream, up from the original ~5 FPS throttle.
 
 ## Run it now
 
@@ -24,7 +25,7 @@ From this directory:
 
 Then open [http://localhost:8000](http://localhost:8000), leave **Demo mode** selected, and press the circular play button. Use the camera path only after the no-camera flow is working.
 
-The reference panel plays the locally packaged copy of `https://www.youtube.com/shorts/W0N9pOGTgZM` with its audio and extracted pose overlay. Use the **Next** button to move from upper body to lower body, then to the combined move.
+The reference panel plays the locally packaged copy of `https://www.youtube.com/shorts/jrUsvBKemBU` with its audio and extracted pose overlay. Use the **Next** button to move from upper body to lower body, then to the combined move.
 
 The copied virtual environment has stale shell-script shebangs because the folder moved. Invoking tools as `./venv/bin/python -m ...` avoids that problem. To rebuild it cleanly later:
 

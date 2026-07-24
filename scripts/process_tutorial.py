@@ -19,8 +19,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from backend.pose_engine import PoseEngine
 
 
-DEFAULT_URL = "https://www.youtube.com/shorts/W0N9pOGTgZM"
-DEFAULT_VIDEO_ID = "W0N9pOGTgZM"
+DEFAULT_URL = "https://www.youtube.com/shorts/jrUsvBKemBU"
+DEFAULT_VIDEO_ID = "jrUsvBKemBU"
 
 
 def run(command: list[str]) -> None:
@@ -174,7 +174,7 @@ def main() -> None:
     parser.add_argument("--url", default=DEFAULT_URL)
     parser.add_argument("--input", type=Path)
     parser.add_argument("--model", default="yolo11n-pose.pt")
-    parser.add_argument("--sample-fps", type=float, default=10.0)
+    parser.add_argument("--sample-fps", type=float, default=30.0)
     parser.add_argument("--crop-top-ratio", type=float, default=205 / 640)
     parser.add_argument("--output-dir", type=Path, default=Path("frontend/assets"))
     args = parser.parse_args()

@@ -191,10 +191,20 @@ class PracticeSession:
     def learning_payload(self) -> dict[str, Any]:
         with self._lock:
             weakest = self.weakest_bone
-            target_label = weakest.replace("_", " ") if weakest else "full body"
+            focus_label = {
+                "upper": "upper body",
+                "lower": "lower body",
+                "full": "full body",
+            }.get(self.mode, "full body")
+            target_label = weakest.replace("_", " ") if weakest else focus_label
+            scan_rule = (
+                "Scan the full body equally until a stable weak point appears."
+                if self.mode == "full"
+                else f"Scan only the {focus_label} until a stable weak point appears."
+            )
             rules = {
-                "full_body_scan": "Scan the full body equally until a stable weak point appears.",
-                "isolate_angle": f"Isolate the {target_label} angle before adding full-body timing.",
+                "full_body_scan": scan_rule,
+                "isolate_angle": f"Isolate the {target_label} angle before adding {focus_label} timing.",
                 "slow_hold": f"Hold the {target_label} shape for one extra beat, then release.",
                 "count_anchor": f"Anchor the {target_label} correction precisely on counts four and eight.",
             }

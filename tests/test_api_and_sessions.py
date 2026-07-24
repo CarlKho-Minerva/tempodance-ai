@@ -40,6 +40,15 @@ class ApiAndSessionTests(unittest.TestCase):
         self.assertEqual(payload["speed"], 0.5)
         self.assertEqual(store.get(session.id), session)
 
+    def test_initial_policy_respects_isolated_body_focus(self) -> None:
+        store = SessionStore()
+        for focus in ("upper", "lower"):
+            analysis = DeterministicAnalyzer().analyze("demo", focus)
+            session = store.create("demo", focus, analysis)
+            rule = session.payload()["policy"]["rule"]
+            self.assertIn(f"only the {focus} body", rule)
+            self.assertNotIn("full body equally", rule)
+
     def test_fastapi_routes_are_registered(self) -> None:
         paths = {route.path for route in app.routes}
         self.assertIn("/api/sessions", paths)
