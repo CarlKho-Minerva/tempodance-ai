@@ -27,7 +27,8 @@ This demo shows:
 
 The default demo runs without a camera or cloud API. In camera mode, frames are processed by the local FastAPI pose service and are not persisted by application code.
 
-Code: https://github.com/CarlKho-Minerva/tempodance-ai  
+Live demo: https://tempodance-ai.vercel.app<br>
+Code: https://github.com/CarlKho-Minerva/tempodance-ai<br>
 Reference tutorial: https://www.youtube.com/shorts/jrUsvBKemBU
 
 #AI #DanceTech #BuildInPublic
@@ -46,7 +47,8 @@ Reference tutorial: https://www.youtube.com/shorts/jrUsvBKemBU
 
 Built TempoDance AI: a local-first dance coach that turns a tutorial into a 30 FPS, beat-synced pose coach. It teaches upper body → lower body → full move, then adapts one cue at a time.
 
-🎥 [YOUTUBE URL]  
+🎥 [YOUTUBE URL]<br>
+🌐 https://tempodance-ai.vercel.app<br>
 💻 https://github.com/CarlKho-Minerva/tempodance-ai
 
 #BuildInPublic #AI #DanceTech
@@ -56,7 +58,7 @@ Built TempoDance AI: a local-first dance coach that turns a tutorial into a 30 F
 1. Dance tutorials can show a move, but they cannot see why you keep missing it. I built TempoDance AI to close that loop.
 2. It overlays a 30 FPS pose track on the source, keeps counts tied to the audio beat, and teaches upper body → lower body → full move to avoid cognitive overload.
 3. A local pose scorer identifies the weakest limb. Session memory then checks whether the cue actually improved that target before the policy changes.
-4. Next step: I am testing it with my own dancing. Demo: [YOUTUBE URL] · Code: https://github.com/CarlKho-Minerva/tempodance-ai
+4. Next step: I am testing it with my own dancing. Demo: [YOUTUBE URL] · Try it: https://tempodance-ai.vercel.app · Code: https://github.com/CarlKho-Minerva/tempodance-ai
 
 ## Submission media
 

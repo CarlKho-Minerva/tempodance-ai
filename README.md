@@ -1,5 +1,9 @@
 # TempoDance AI
 
+[![Watch the 29-second TempoDance AI demo](artifacts/youtube-thumbnail.png)](artifacts/tempodance-demo-voiced.mp4)
+
+**[▶ Watch the 29-second demo](artifacts/tempodance-demo-voiced.mp4)** · **[Launch TempoDance AI on Vercel](https://tempodance-ai.vercel.app)**
+
 ![TempoDance AI cover featuring the source-synced coaching workspace](assets/cover.png)
 
 TempoDance AI is a self-evolving dance coach. It compares a learner's body geometry with a source-synchronized tutorial pose, identifies the lowest-scoring tracked limb, and evaluates its coaching focus after each completed server-side loop.
@@ -16,6 +20,8 @@ The current hackathon build is deliberately demo-safe:
 - **Live camera motion targets 20 pose updates per second** from a requested 30 FPS camera stream, up from the original ~5 FPS throttle.
 
 ## Run it now
+
+Open the **[hosted demo](https://tempodance-ai.vercel.app)** for the deterministic no-camera experience, or run the complete local API and optional camera path below.
 
 From this directory:
 
