@@ -587,6 +587,44 @@ h1 span {
   background: rgba(255, 255, 255, 0.02);
 }
 
+.audio-toggle {
+  display: inline-flex;
+  min-height: 32px;
+  cursor: pointer;
+  align-items: center;
+  gap: 6px;
+  padding: 0 9px;
+  border: 1px solid rgba(183, 255, 90, 0.2);
+  border-radius: 9px;
+  background: rgba(183, 255, 90, 0.08);
+  color: var(--lime);
+  font-size: 8px;
+  font-weight: 750;
+}
+
+.audio-toggle svg {
+  width: 14px;
+  fill: currentColor;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.7;
+}
+
+.audio-toggle .audio-waves {
+  fill: none;
+}
+
+.audio-toggle[aria-pressed="false"] {
+  border-color: var(--line);
+  background: rgba(255, 255, 255, 0.025);
+  color: var(--muted);
+}
+
+.audio-toggle[aria-pressed="false"] .audio-waves {
+  display: none;
+}
+
 .speed-tier {
   min-width: 42px;
   padding: 6px 7px;
@@ -2038,6 +2076,14 @@ h1 span {
     justify-content: space-between;
   }
 
+  .speed-control {
+    flex-wrap: wrap;
+  }
+
+  .speed-tiers {
+    flex: 1;
+  }
+
   .segmented-control .segment {
     flex: 1;
     justify-content: center;
@@ -2109,6 +2155,11 @@ h1 span {
 
   .speed-tiers {
     width: 100%;
+  }
+
+  .audio-toggle {
+    width: 100%;
+    justify-content: center;
   }
 
   .speed-tier {

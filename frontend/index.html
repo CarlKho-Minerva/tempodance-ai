@@ -106,8 +106,13 @@
               </div>
               <div class="speed-control" aria-label="Playback speed">
                 <span>Coach speed</span>
+                <button id="audioToggle" class="audio-toggle" type="button" aria-pressed="true">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 10v4h3l4 3V7L8 10H5Z"/><path class="audio-waves" d="M15 9.5a4 4 0 0 1 0 5m2-7a7 7 0 0 1 0 9"/></svg>
+                  <span>Audio on</span>
+                </button>
                 <div id="speedTiers" class="speed-tiers">
-                  <button class="speed-tier active" data-speed="0.5" type="button">0.5×</button>
+                  <button class="speed-tier active" data-speed="0.25" type="button">0.25×</button>
+                  <button class="speed-tier" data-speed="0.5" type="button">0.5×</button>
                   <button class="speed-tier" data-speed="0.6" type="button">0.6×</button>
                   <button class="speed-tier" data-speed="0.8" type="button">0.8×</button>
                   <button class="speed-tier" data-speed="1" type="button">1.0×</button>
@@ -236,7 +241,7 @@
               </article>
               <article class="metric-card">
                 <div class="metric-icon tempo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v7l4 2"/><circle cx="12" cy="12" r="9"/></svg></div>
-                <div><span>Timing preview</span><strong id="timingMetric">--</strong></div>
+                <div><span>Beat timing</span><strong id="timingMetric">Ready</strong></div>
                 <small id="timingDelta">Synced to source audio</small>
               </article>
               <article class="metric-card">

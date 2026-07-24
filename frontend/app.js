@@ -5,7 +5,7 @@ const query = new URLSearchParams(window.location.search);
 const API_ORIGIN = (query.get("api") || (window.location.protocol === "file:" ? "http://127.0.0.1:8000" : window.location.origin)).replace(/\/$/, "");
 const WS_ORIGIN = API_ORIGIN.replace(/^http/, "ws");
 
-const SPEEDS = [0.5, 0.6, 0.8, 1];
+const SPEEDS = [0.25, 0.5, 0.6, 0.8, 1];
 const SCORE_RING_LENGTH = 138.23;
 const SOURCE_VIDEO_ID = "W0N9pOGTgZM";
 const SOURCE_POSE_PATH = `./assets/tutorial-${SOURCE_VIDEO_ID}-pose.json`;
@@ -78,6 +78,8 @@ const REFERENCE_KEYFRAMES = [
 const state = {
   mode: "demo",
   focus: "upper",
+  audioEnabled: true,
+  speedLocked: true,
   playing: false,
   analyzing: false,
   speedIndex: 0,
@@ -115,6 +117,10 @@ const state = {
   routineKeyframes: REFERENCE_KEYFRAMES,
   sourceDuration: SOURCE_DURATION_SECONDS,
   sourceMotionReady: false,
+  sourceBeats: [],
+  detectedBpm: 90,
+  countPhase: 0,
+  currentBeatIndex: -1,
   previousSourceTime: 0,
 };
 
@@ -172,6 +178,7 @@ const elements = {
   learningStepTitle: $("#learningStepTitle"),
   learningStepHint: $("#learningStepHint"),
   nextFocusButton: $("#nextFocusButton"),
+  audioToggle: $("#audioToggle"),
   sourceOverlayLabel: $("#sourceOverlayLabel"),
   sourceBadge: $("#sourceBadge"),
   focusLabel: $("#focusLabel"),
@@ -202,6 +209,10 @@ function formatTime(milliseconds) {
   return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
 }
 
+function formatPlaybackSpeed(speed) {
+  return `${Number(speed).toFixed(speed < .5 ? 2 : 1)}×`;
+}
+
 function getReferencePose(phase) {
   const keyframes = state.routineKeyframes;
   const position = phase * keyframes.length;
@@ -223,6 +234,8 @@ async function loadSourceMotion() {
     if (!poses || poses.length < 8) throw new Error("Pose track is incomplete");
     state.routineKeyframes = poses;
     state.sourceDuration = Number(payload.duration) || SOURCE_DURATION_SECONDS;
+    state.sourceBeats = Array.isArray(payload.beats) ? payload.beats.map(Number).filter(Number.isFinite) : [];
+    state.detectedBpm = Number(payload.detected_bpm) || 90;
     state.sourceMotionReady = true;
     elements.sourceBadge.innerHTML = "<i></i> ML track ready";
   } catch {
@@ -253,13 +266,28 @@ function updateFocusUI() {
 
 function setFocus(focus, { announce = true } = {}) {
   if (!FOCUS_STEPS.some((step) => step.id === focus)) return;
+  const changed = state.focus !== focus;
   pausePractice();
   state.focus = focus;
   state.phase = 0;
   state.currentCount = 1;
+  state.countPhase = 0;
+  state.currentBeatIndex = -1;
   state.previousSourceTime = 0;
   state.score = null;
   state.boneScores = {};
+  state.cleanLoops = 0;
+  state.completedLoops = 0;
+  state.loopMinimum = 1;
+  elements.cleanLoops.textContent = "0";
+  if (changed) {
+    state.sessionId = null;
+    state.remoteSession = false;
+    state.remoteCoaching = null;
+    state.remoteLearning = null;
+    state.memories = [];
+    renderMemories();
+  }
   elements.referenceVideo.currentTime = 0;
   elements.attentionMetric.textContent = focus === "upper" ? "Arms + shoulders" : focus === "lower" ? "Hips + legs" : "Whole body";
   elements.attentionDelta.textContent = "Only this learning step is scored";
@@ -275,6 +303,16 @@ function setFocus(focus, { announce = true } = {}) {
   updateCountUI();
   updateScoreUI();
   if (announce) toast(`${FOCUS_STEPS.find((step) => step.id === focus).title} · video reset to the start`);
+}
+
+function setAudioEnabled(enabled, { announce = true } = {}) {
+  state.audioEnabled = Boolean(enabled);
+  elements.referenceVideo.muted = !state.audioEnabled;
+  elements.referenceVideo.volume = 1;
+  elements.audioToggle.setAttribute("aria-pressed", String(state.audioEnabled));
+  elements.audioToggle.querySelector("span").textContent = state.audioEnabled ? "Audio on" : "Audio muted";
+  updateTimingUI();
+  if (announce) toast(state.audioEnabled ? "Source audio on · beat counts synchronized" : "Source audio muted");
 }
 
 function createDemoPose(reference, timestamp) {
@@ -507,19 +545,14 @@ function updateScoreUI() {
 
 function updateTimingUI() {
   state.timingOffset = null;
-  if (state.mode === "camera") {
-    elements.timingMetric.textContent = state.playing ? `${elements.referenceVideo.currentTime.toFixed(1)}s` : "--";
-    elements.timingDelta.textContent = "Video, audio, and overlay share one clock";
-    return;
-  }
-  if (!state.playing) return;
-  elements.timingMetric.textContent = `${elements.referenceVideo.currentTime.toFixed(1)}s`;
-  elements.timingDelta.textContent = "Synced to source audio";
+  elements.timingMetric.textContent = state.playing ? `Count ${state.currentCount}` : "Ready";
+  const practiceBpm = Math.round(state.detectedBpm * SPEEDS[state.speedIndex]);
+  elements.timingDelta.textContent = `${practiceBpm} BPM practice · ${state.audioEnabled ? "audio on" : "audio muted"}`;
 }
 
 function updateCountUI() {
   elements.watermarkCount.textContent = state.currentCount;
-  elements.timelineFill.style.width = `${state.phase * 100}%`;
+  elements.timelineFill.style.width = `${state.countPhase * 100}%`;
   $$(".count-marker").forEach((marker, index) => {
     marker.classList.toggle("active", index + 1 === state.currentCount);
     marker.classList.toggle("done", index + 1 < state.currentCount);
@@ -543,7 +576,7 @@ function updateAgentUI() {
     elements.agentStateText.textContent = state.score == null ? "Ready to observe" : "Paused safely";
     return;
   }
-  const cycle = state.phase % 1;
+  const cycle = state.countPhase % 1;
   if (cycle < .52) setAgentStep("observe");
   else if (cycle < .83) setAgentStep("diagnose");
   else setAgentStep("adapt");
@@ -667,7 +700,7 @@ function handleCompletedLoop() {
     elements.cleanLoops.textContent = "0";
     elements.policyVersion.textContent = `Policy v1.${state.policyVersion - 1}`;
     updateSpeedUI(previous);
-    toast(`Mastery unlocked · coach speed is now ${SPEEDS[state.speedIndex].toFixed(1)}×`);
+    toast(`Mastery unlocked · coach speed is now ${formatPlaybackSpeed(SPEEDS[state.speedIndex])}`);
   }
 }
 
@@ -768,11 +801,11 @@ function applyBackendPayload(payload, source = "api") {
     ?? backendState.speed;
   const parsedSpeed = Number.parseFloat(String(speedValue ?? "").replace("×", ""));
   const remoteSpeedIndex = SPEEDS.findIndex((speed) => Math.abs(speed - parsedSpeed) < .001);
-  if (remoteSpeedIndex >= 0 && remoteSpeedIndex !== state.speedIndex) {
+  if (remoteSpeedIndex >= 0 && remoteSpeedIndex !== state.speedIndex && !state.speedLocked) {
     const previous = state.speedIndex;
     state.speedIndex = remoteSpeedIndex;
     updateSpeedUI(remoteSpeedIndex > previous ? previous : null);
-    toast(`Agent policy set coach speed to ${SPEEDS[remoteSpeedIndex].toFixed(1)}×`);
+    toast(`Agent policy set coach speed to ${formatPlaybackSpeed(SPEEDS[remoteSpeedIndex])}`);
   }
 
   const remoteCleanLoops = Number(
@@ -869,8 +902,8 @@ function applyBackendPayload(payload, source = "api") {
   }
 
   const latency = Number(nested.latency_ms ?? nested.inference_ms);
-  if (Number.isFinite(latency)) elements.latencyLabel.textContent = `Pose engine · ${Math.round(latency)} ms`;
-  else if (source === "ws" && state.lastSocketSentAt) elements.latencyLabel.textContent = `Round trip · ${Math.round(performance.now() - state.lastSocketSentAt)} ms`;
+  if (Number.isFinite(latency)) elements.latencyLabel.textContent = `Pose · ${Math.round(latency)} ms · 15 FPS target`;
+  else if (source === "ws" && state.lastSocketSentAt) elements.latencyLabel.textContent = `Round trip · ${Math.round(performance.now() - state.lastSocketSentAt)} ms · 15 FPS target`;
 }
 
 async function fetchJson(path, options = {}, timeoutMs = 2400) {
@@ -937,7 +970,7 @@ async function postObservation() {
     user_keypoints: state.latestLive,
     timing_offset_ms: state.timingOffset,
     loop_id: state.completedLoops + 1,
-    loop_progress: state.phase,
+    loop_progress: state.countPhase,
     frame_index: Math.floor(state.elapsedPlayingMs / 150),
     ephemeral: true,
   };
@@ -993,7 +1026,7 @@ function connectSocket() {
 }
 
 function sendCameraFrame(now) {
-  if (!state.cameraReady || !state.socketReady || !state.playing || now - state.lastSocketSentAt < 185) return;
+  if (!state.cameraReady || !state.socketReady || !state.playing || now - state.lastSocketSentAt < 66) return;
   if (state.socket.bufferedAmount > 350_000) return;
   const video = elements.cameraVideo;
   if (!video.videoWidth || !video.videoHeight) return;
@@ -1129,7 +1162,12 @@ async function enableCamera() {
   try {
     if (!navigator.mediaDevices?.getUserMedia) throw new Error("This browser does not expose camera access.");
     const stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: "user", width: { ideal: 960 }, height: { ideal: 720 } },
+      video: {
+        facingMode: "user",
+        width: { ideal: 960 },
+        height: { ideal: 720 },
+        frameRate: { ideal: 30 },
+      },
       audio: false,
     });
     state.cameraStream = stream;
@@ -1138,7 +1176,7 @@ async function enableCamera() {
     await elements.cameraVideo.play();
     elements.cameraVideo.hidden = false;
     elements.liveBadge.innerHTML = "<i></i> Camera ready";
-    elements.latencyLabel.textContent = "Camera active · not recording";
+    elements.latencyLabel.textContent = "Camera 30 FPS · pose target 15 FPS";
     await ensureSession();
     connectSocket();
     toast("Camera enabled · frames remain ephemeral");
@@ -1172,6 +1210,8 @@ async function startPractice() {
   }
   ensureSession();
   elements.referenceVideo.playbackRate = SPEEDS[state.speedIndex];
+  elements.referenceVideo.muted = !state.audioEnabled;
+  elements.referenceVideo.volume = 1;
   try {
     await elements.referenceVideo.play();
   } catch {
@@ -1207,7 +1247,9 @@ function resetSession({ keepMode = true } = {}) {
     mode: keepMode ? state.mode : "demo",
     focus: "upper",
     phase: 0,
+    countPhase: 0,
     currentCount: 1,
+    currentBeatIndex: -1,
     completedLoops: 0,
     cleanLoops: 0,
     loopMinimum: 1,
@@ -1231,8 +1273,7 @@ function resetSession({ keepMode = true } = {}) {
   });
   elements.cleanLoops.textContent = "0";
   elements.sessionClock.textContent = "00:00";
-  elements.timingMetric.textContent = "--";
-  elements.timingDelta.textContent = "Synced to source audio";
+  elements.timingMetric.textContent = "Ready";
   elements.transportTitle.textContent = "Ready for your first loop";
   elements.transportHint.textContent = "Press play — the coach will adapt after each pass.";
   elements.coachCue.hidden = false;
@@ -1288,14 +1329,34 @@ function tick(now) {
     if (elements.referenceVideo.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA && sourceDuration > 0) {
       const sourceTime = elements.referenceVideo.currentTime;
       state.phase = clamp(sourceTime / sourceDuration);
-      if (sourceTime + .25 < state.previousSourceTime) handleCompletedLoop();
+      if (sourceTime + .25 < state.previousSourceTime) state.currentBeatIndex = -1;
+      if (state.sourceBeats.length) {
+        const beatIndex = state.sourceBeats.findLastIndex((beat) => beat <= sourceTime + .015);
+        if (beatIndex >= 0) {
+          const previousBeatIndex = state.currentBeatIndex;
+          const beatStart = state.sourceBeats[beatIndex];
+          const beatEnd = state.sourceBeats[beatIndex + 1] ?? beatStart + 60 / state.detectedBpm;
+          const beatProgress = clamp((sourceTime - beatStart) / (beatEnd - beatStart));
+          state.currentCount = (beatIndex % 8) + 1;
+          state.countPhase = ((beatIndex % 8) + beatProgress) / 8;
+          if (previousBeatIndex >= 0 && Math.floor(beatIndex / 8) > Math.floor(previousBeatIndex / 8)) handleCompletedLoop();
+          state.currentBeatIndex = beatIndex;
+        } else {
+          state.currentCount = 1;
+          state.countPhase = 0;
+        }
+      } else {
+        state.currentCount = Math.min(8, Math.floor(state.phase * 8) + 1);
+        state.countPhase = state.phase;
+      }
       state.previousSourceTime = sourceTime;
     } else {
       const loopDuration = (state.sourceDuration * 1000) / speed;
       state.phase = (state.phase + delta / loopDuration) % 1;
       if (state.phase < previousPhase) handleCompletedLoop();
+      state.currentCount = Math.min(8, Math.floor(state.phase * 8) + 1);
+      state.countPhase = state.phase;
     }
-    state.currentCount = Math.min(8, Math.floor(state.phase * 8) + 1);
     state.loopMinimum = Math.min(state.loopMinimum, state.score ?? 1);
     elements.transportTitle.textContent = `Loop ${state.completedLoops + 1} · count ${state.currentCount}`;
     elements.sessionClock.textContent = formatTime(state.elapsedPlayingMs);
@@ -1368,6 +1429,7 @@ function initialize() {
   elements.cameraModeButton.addEventListener("click", () => setMode("camera"));
   elements.enableCameraButton.addEventListener("click", enableCamera);
   elements.useDemoFallbackButton.addEventListener("click", () => setMode("demo"));
+  elements.audioToggle.addEventListener("click", () => setAudioEnabled(!state.audioEnabled));
   $$(".focus-step").forEach((button) => {
     button.addEventListener("click", () => setFocus(button.dataset.focus));
   });
@@ -1383,7 +1445,7 @@ function initialize() {
       elements.referenceVideo.playbackRate = SPEEDS[index];
       elements.cleanLoops.textContent = "0";
       updateSpeedUI();
-      toast(wasHigher ? `Manual control · speed set to ${SPEEDS[index].toFixed(1)}×` : `Coach speed set to ${SPEEDS[index].toFixed(1)}×`);
+      toast(wasHigher ? `Manual control · speed set to ${formatPlaybackSpeed(SPEEDS[index])}` : `Coach speed set to ${formatPlaybackSpeed(SPEEDS[index])}`);
     });
   });
   $("#privacyButton").addEventListener("click", () => {
@@ -1402,7 +1464,9 @@ function initialize() {
 
   renderMemories();
   elements.referenceVideo.loop = true;
+  elements.referenceVideo.preservesPitch = true;
   elements.referenceVideo.playbackRate = SPEEDS[state.speedIndex];
+  setAudioEnabled(true, { announce: false });
   elements.referenceVideo.addEventListener("error", () => {
     showBanner("The packaged tutorial video could not load. Re-run scripts/process_tutorial.py to restore it.");
   });
